@@ -77,7 +77,7 @@ const ErrorNotification: React.FC<ErrorNotificationProps> = ({ notification, onC
   return (
     <div
       className={`
-        pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg border shadow-lg transition-all duration-300 ease-in-out
+        pointer-events-auto w-full max-w-md overflow-hidden rounded-lg border shadow-lg transition-all duration-300 ease-in-out
         ${getStyles()}
         ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
       `}
@@ -88,14 +88,14 @@ const ErrorNotification: React.FC<ErrorNotificationProps> = ({ notification, onC
             {getIcon()}
           </div>
           <div className="ml-3 w-0 flex-1 pt-0.5">
-            <p className="text-sm font-medium">{notification.title}</p>
-            <p className="mt-1 text-sm opacity-90">{notification.message}</p>
+            <p className="text-sm font-medium break-words">{notification.title}</p>
+            <p className="mt-1 text-sm opacity-90 break-words leading-relaxed">{notification.message}</p>
             {notification.action && (
               <div className="mt-3">
                 <button
                   type="button"
                   onClick={notification.action.onClick}
-                  className="text-sm font-medium underline hover:no-underline"
+                  className="text-sm font-medium underline hover:no-underline break-words"
                 >
                   {notification.action.label}
                 </button>
