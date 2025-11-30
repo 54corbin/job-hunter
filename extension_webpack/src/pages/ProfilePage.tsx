@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getUserProfile, saveUserProfile, UserProfile } from '../services/storageService';
+import { useNotifications } from '../components/NotificationProvider';
 import { FiPlus, FiTrash2, FiUser, FiMail, FiPhone, FiBriefcase, FiBookOpen, FiAward } from 'react-icons/fi';
 import ResumeManager from '../components/ResumeManager';
 
@@ -27,10 +28,14 @@ const mergeProfiles = (base: UserProfile, incoming: Partial<UserProfile>): UserP
 
 const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const { showError, showSuccess } = useNotifications();
 
   useEffect(() => {
     getUserProfile().then(storedProfile => {
       setProfile(mergeProfiles(defaultProfile, storedProfile || {}));
+    }).catch(error => {
+      console.error("Failed to load profile:", error);
+      showError('Load Failed', 'Failed to load your profile. Please refresh the page.');
     });
   }, []);
 
@@ -51,7 +56,14 @@ const ProfilePage: React.FC = () => {
       } else {
         (newProfile as any)[field] = value;
       }
-      saveUserProfile(newProfile);
+      
+      saveUserProfile(newProfile).then(() => {
+        showSuccess('Profile Updated', 'Your changes have been saved successfully.');
+      }).catch(error => {
+        console.error("Failed to save profile:", error);
+        showError('Save Failed', 'Failed to save your profile changes. Please try again.');
+      });
+      
       return newProfile;
     });
   };
@@ -62,7 +74,14 @@ const ProfilePage: React.FC = () => {
       const newProfile = { ...prevProfile };
       const newEntry = section === 'experience' ? { company: '', title: '' } : { institution: '', degree: '' };
       (newProfile[section] as any[]).push(newEntry);
-      saveUserProfile(newProfile);
+      
+      saveUserProfile(newProfile).then(() => {
+        showSuccess('Entry Added', `New ${section} entry has been added.`);
+      }).catch(error => {
+        console.error("Failed to save new entry:", error);
+        showError('Save Failed', 'Failed to add new entry. Please try again.');
+      });
+      
       return newProfile;
     });
   };
@@ -72,7 +91,14 @@ const ProfilePage: React.FC = () => {
       if (!prevProfile) return null;
       const newProfile = { ...prevProfile };
       (newProfile[section] as any[]).splice(index, 1);
-      saveUserProfile(newProfile);
+      
+      saveUserProfile(newProfile).then(() => {
+        showSuccess('Entry Removed', `${section} entry has been removed.`);
+      }).catch(error => {
+        console.error("Failed to remove entry:", error);
+        showError('Remove Failed', 'Failed to remove entry. Please try again.');
+      });
+      
       return newProfile;
     });
   };

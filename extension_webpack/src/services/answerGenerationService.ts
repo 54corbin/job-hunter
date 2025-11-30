@@ -1,5 +1,7 @@
 import { generateContent } from "./llmService";
+import { ServiceError } from "./errorService";
 import { getUserProfile, UserProfile, Resume } from "./storageService";
+import { JobHunterError, handleServiceError } from "./errorService";
 
 export interface AnswerGenerationRequest {
   selectedText: string;
@@ -50,22 +52,48 @@ export const generateAnswerForSelection = async (
       request.context
     );
 
-    const answer = await generateContent(prompt);
+    const result = await generateContent(prompt);
     
-    if (!answer) {
+    if (result.error) {
+      const errorMessage = getErrorUserMessage(result.error);
+      return {
+        answer: "",
+        error: errorMessage
+      };
+    }
+    
+    if (!result.content) {
       return {
         answer: "",
         error: "Failed to generate answer. Please check your AI provider configuration."
       };
     }
 
-    return { answer };
+    return { answer: result.content };
   } catch (error) {
     console.error("Error generating answer:", error);
     return {
       answer: "",
       error: "An unexpected error occurred while generating the answer."
     };
+  }
+};
+
+const getErrorUserMessage = (error: ServiceError): string => {
+  switch (error.code) {
+    case 'NO_PROVIDER':
+    case 'NO_API_KEY':
+      return 'Please configure an AI provider in Settings before proceeding.';
+    case 'NETWORK_ERROR':
+      return 'Network connection failed. Please check your internet connection.';
+    case 'RATE_LIMITED':
+      return 'Rate limit exceeded. Please wait a moment before trying again.';
+    case 'SERVER_ERROR':
+      return 'Server error occurred. Please try again later.';
+    case 'TIMEOUT':
+      return 'Request timed out. Please try again.';
+    default:
+      return error.message || 'An unexpected error occurred.';
   }
 };
 

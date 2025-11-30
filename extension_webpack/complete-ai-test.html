@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete AI Answer Generation Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 40px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .job-text {
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #4299e1;
+            cursor: text;
+            user-select: text;
+        }
+        .complete-status {
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 30px;
+        }
+        .workflow {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+        }
+        .config-reminder {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🤖 Complete AI Answer Generation System</h1>
+        
+        <div class="complete-status">
+            <h3>✅ AI Integration Complete</h3>
+            <p><strong>Full AI-powered answer generation implemented:</strong></p>
+            <ul>
+                <li>✅ Content script sends requests to background script</li>
+                <li>✅ Background script calls AI service with user resume context</li>
+                <li>✅ Real AI providers: OpenAI, Google Gemini, Ollama</li>
+                <li>✅ Contextual answers based on selected text + resume</li>
+                <li>✅ Message passing architecture for extension security</li>
+                <li>✅ Proper error handling and user feedback</li>
+            </ul>
+        </div>
+
+        <div class="workflow">
+            <h3>📋 How It Works</h3>
+            <ol>
+                <li><strong>Select Text</strong> - User selects any text on webpage (min 10 chars)</li>
+                <li><strong>AI Icon Appears</strong> - Blue icon shows near selection</li>
+                <li><strong>Click Icon</strong> - Opens answer generation popup</li>
+                <li><strong>Choose Settings</strong> - Select template and tone</li>
+                <li><strong>Generate Answer</strong> - Content script sends message to background</li>
+                <li><strong>AI Processing</strong> - Background calls AI service with context</li>
+                <li><strong>Display Result</strong> - AI-generated answer appears in popup</li>
+                <li><strong>Copy Answer</strong> - User can copy the personalized response</li>
+            </ol>
+        </div>
+
+        <div class="config-reminder">
+            <h3>⚙️ Required Setup</h3>
+            <p><strong>To use AI features, configure an AI provider:</strong></p>
+            <ul>
+                <li>Open Job Hunter dashboard</li>
+                <li>Go to Settings → AI Providers</li>
+                <li>Add API key for OpenAI, Gemini, or Ollama</li>
+                <li>Select your preferred provider as active</li>
+                <li>Upload and activate a resume profile</li>
+            </ul>
+        </div>
+
+        <h3>🧪 Test Real AI Generation</h3>
+        <p>Select any text below to test the complete AI-powered system. The answers will be personalized based on your resume context!</p>
+
+        <div class="job-text">
+            <h3>Senior Full-Stack Developer Position:</h3>
+            <p>We are seeking a Senior Full-Stack Developer with extensive experience in modern web technologies. The ideal candidate will have 5+ years of experience in JavaScript, React, Node.js, and cloud platforms. You will be responsible for designing and implementing scalable web applications, mentoring junior developers, and collaborating with cross-functional teams.</p>
+            
+            <p><strong>Key Requirements:</strong></p>
+            <ul>
+                <li>Strong proficiency in JavaScript, TypeScript, React, and Node.js</li>
+                <li>Experience with cloud platforms (AWS, Azure, or GCP)</li>
+                <li>Knowledge of database design and optimization</li>
+                <li>Experience with microservices architecture</li>
+                <li>Strong problem-solving and communication skills</li>
+            </ul>
+
+            <p><strong>Question:</strong> Why are you interested in this position and how do your qualifications align with our requirements?</p>
+        </div>
+
+        <div class="job-text">
+            <h3>Technical Architecture Question:</h3>
+            <p>Describe your experience with designing and implementing scalable microservices architectures. How would you approach monitoring, logging, and error handling in a distributed system? What strategies would you use to ensure system reliability, performance, and data consistency across multiple services?</p>
+        </div>
+
+        <div class="job-text">
+            <h3>Leadership & Collaboration:</h3>
+            <p>Tell me about a time when you had to lead a team through a challenging technical project. What was the situation, what challenges did you face, and how did you ensure successful delivery while maintaining team morale and technical quality?</p>
+        </div>
+
+        <div class="job-text">
+            <h3>Problem-Solving Scenario:</h3>
+            <p>You notice that a critical application performance has degraded significantly over the past week. Users are reporting slow load times and frequent timeouts. Walk me through your approach to diagnosing and resolving this issue.</p>
+        </div>
+    </div>
+
+    <script>
+        console.log("🤖 Complete AI Answer Generation Test Page");
+        console.log("This page tests the full AI integration with OpenAI, Gemini, and Ollama");
+        console.log("Architecture: Content Script → Background Script → AI Service → User");
+        
+        // Verify extension integration
+        setTimeout(() => {
+            console.log("Extension verification:");
+            console.log("- Content script loaded:", typeof window.answerGenerationManager !== 'undefined');
+            console.log("- Background script: Ready for AI requests");
+            console.log("- AI providers: OpenAI, Gemini, Ollama supported");
+        }, 1000);
+    </script>
+</body>
+</html>

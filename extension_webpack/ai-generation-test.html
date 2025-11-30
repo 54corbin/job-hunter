@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Answer Generation Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 40px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .job-text {
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #4299e1;
+            cursor: text;
+            user-select: text;
+        }
+        .ai-status {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 30px;
+        }
+        .config-required {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 30px;
+        }
+        .provider-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🤖 AI-Powered Answer Generation</h1>
+        
+        <div class="ai-status">
+            <h3>✅ Now Using Real AI Providers</h3>
+            <p><strong>Changes made:</strong></p>
+            <ul>
+                <li>✅ Replaced mock responses with actual AI service calls</li>
+                <li>✅ Integrated with OpenAI, Google Gemini, and Ollama</li>
+                <li>✅ Contextual answers based on user's resume</li>
+                <li>✅ Personalized responses matching user's background</li>
+                <li>✅ Real-time generation using selected text + resume context</li>
+            </ul>
+        </div>
+
+        <div class="config-required">
+            <h3>⚙️ AI Provider Setup Required</h3>
+            <p><strong>To use AI-powered answers, you need to configure an AI provider:</strong></p>
+            
+            <div class="provider-info">
+                <h4>OpenAI (GPT Models)</h4>
+                <ul>
+                    <li>Get API key from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a></li>
+                    <li>Supports GPT-3.5, GPT-4, etc.</li>
+                    <li>Best for general purpose responses</li>
+                </ul>
+            </div>
+
+            <div class="provider-info">
+                <h4>Google Gemini</h4>
+                <ul>
+                    <li>Get API key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></li>
+                    <li>Free tier available</li>
+                    <li>Good for technical questions</li>
+                </ul>
+            </div>
+
+            <div class="provider-info">
+                <h4>Ollama (Local Models)</h4>
+                <ul>
+                    <li>Install <a href="https://ollama.ai" target="_blank">Ollama</a> locally</li>
+                    <li>No API costs - runs on your machine</li>
+                    <li>Supports Llama, Mistral, CodeLlama, etc.</li>
+                    <li>Best for privacy-conscious users</li>
+                </ul>
+            </div>
+
+            <p><strong>Setup Location:</strong> Open Job Hunter dashboard → Settings → AI Providers</p>
+        </div>
+
+        <h3>🧪 Test Real AI Generation</h3>
+        <p>Select any text below, click the AI icon, and generate answers. If no AI provider is configured, it will show an error message. Once configured, you'll get personalized, contextual responses!</p>
+
+        <div class="job-text">
+            <h3>Senior Software Engineer Position:</h3>
+            <p>We are seeking a Senior Software Engineer with extensive experience in React, Node.js, and cloud technologies. The ideal candidate will have 5+ years of full-stack development experience, strong problem-solving skills, and the ability to work in a collaborative environment.</p>
+            
+            <p><strong>Key Requirements:</strong></p>
+            <ul>
+                <li>Strong JavaScript and TypeScript programming skills</li>
+                <li>Experience with React and modern frontend frameworks</li>
+                <li>Knowledge of cloud platforms (AWS, Azure, or GCP)</li>
+                <li>Experience with microservices architecture</li>
+                <li>Excellent communication and teamwork abilities</li>
+            </ul>
+
+            <p><strong>Question:</strong> Why are you interested in this position and how do your qualifications align with our requirements?</p>
+        </div>
+
+        <div class="job-text">
+            <h3>Technical Interview Question:</h3>
+            <p>Describe your experience with designing and implementing scalable microservices architectures. How would you approach monitoring, logging, and error handling in a distributed system? What strategies would you use to ensure system reliability and performance?</p>
+        </div>
+
+        <div class="job-text">
+            <h3>Behavioral Question:</h3>
+            <p>Tell me about a time when you had to learn a new technology quickly to meet a critical project deadline. How did you approach the learning process, what resources did you use, and what was the final outcome?</p>
+        </div>
+
+        <div class="job-text">
+            <h3>General Technical Question:</h3>
+            <p>Explain the difference between REST and GraphQL APIs, including their respective advantages and disadvantages. When would you choose one over the other?</p>
+        </div>
+    </div>
+
+    <script>
+        console.log("AI-Powered Answer Generation Test Page Loaded");
+        console.log("This page tests the integration with OpenAI, Gemini, and Ollama providers");
+        
+        // Check if extension loaded properly
+        setTimeout(() => {
+            console.log("Extension check:");
+            console.log("- Content script loaded:", typeof window.answerGenerationManager !== 'undefined');
+            console.log("- AI service integration: Active");
+        }, 1000);
+    </script>
+</body>
+</html>

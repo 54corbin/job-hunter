@@ -12,6 +12,7 @@ import {
   generateCoverLetterForJob,
 } from "../services/llmService";
 import { generateAnswerForSelection } from "../services/answerGenerationService";
+import { handleServiceError } from "../services/errorService";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 let isCancelled = false;
@@ -258,8 +259,21 @@ async function fetchAndScrapeJobs(resumeId: string, filters: any) {
   let keywords = resume.filters?.keywords;
   if (!keywords || keywords.length === 0) {
     console.log("Keywords not found in resume filters, extracting them now.");
-    keywords = await extractKeywordsFromResume(resume.text);
-    if (keywords && profile) {
+    const keywordsResult = await extractKeywordsFromResume(resume.text);
+    
+    if ('error' in keywordsResult) {
+      console.error("Failed to extract keywords from resume:", keywordsResult.error);
+      chrome.runtime.sendMessage({ 
+        type: "JOB_MATCHING_FAILURE", 
+        error: "Failed to extract keywords from resume for job search" 
+      });
+      chrome.runtime.sendMessage({ type: "JOB_MATCHING_COMPLETE" });
+      return;
+    }
+    
+    keywords = keywordsResult;
+    
+    if (keywords && keywords.length > 0 && profile) {
       // Save keywords for future use
       const updatedResumes = profile.resumes?.map(r => {
         if (r.id === resumeId) {
@@ -314,38 +328,78 @@ async function handleScrapedJobs(jobs: any[], resumeId: string) {
 
   if (!resume) {
     console.log("Specified resume not found for matching jobs.");
+    chrome.runtime.sendMessage({ 
+      type: "JOB_MATCHING_FAILURE", 
+      error: "Resume not found for job matching" 
+    });
     chrome.runtime.sendMessage({ type: "JOB_MATCHING_COMPLETE" });
     return;
   }
 
   const resumeSummaryText = resume.text;
   const scoredJobs = [];
+  let hasErrors = false;
+
   for (let i = 0; i < jobs.length; i++) {
     if (isCancelled) {
       console.log("Job matching cancelled.");
       break;
     }
     const job = jobs[i];
-    const result = await getMatchScore(job, resumeSummaryText);
-    if (result) {
-      // Generate a unique ID from the job URL (fallback to title+company)
-      const jobId = job.url || `${job.title}-${job.company}`;
+    
+    try {
+      const result = await getMatchScore(job, resumeSummaryText);
       
-      const scoredJob = { ...job, id: jobId, score: result.score, summary: result.summary };
-      scoredJobs.push(scoredJob);
-      chrome.runtime.sendMessage({ type: "NEW_JOB_SCORED", job: scoredJob });
+      if ('error' in result) {
+        console.error(`Failed to score job ${job.title}:`, result.error);
+        hasErrors = true;
+        continue;
+      }
+      
+      if (result && typeof result.score === 'number') {
+        // Generate a unique ID from the job URL (fallback to title+company)
+        const jobId = job.url || `${job.title}-${job.company}`;
+        
+        const scoredJob = { ...job, id: jobId, score: result.score, summary: result.summary };
+        scoredJobs.push(scoredJob);
+        chrome.runtime.sendMessage({ type: "NEW_JOB_SCORED", job: scoredJob });
+      }
+    } catch (error) {
+      console.error(`Error scoring job ${job.title}:`, error);
+      hasErrors = true;
     }
+    
     const progress = ((i + 1) / jobs.length) * 100;
     chrome.runtime.sendMessage({ type: "JOB_MATCHING_PROGRESS", progress });
   }
 
   if (!isCancelled) {
-    const existingJobs = await getJobsForResume(resumeId);
-    const newJobs = [...existingJobs, ...scoredJobs];
-    const uniqueJobs = Array.from(
-      new Map(newJobs.map((job) => [job.url, job])).values(),
-    );
-    await saveJobsForResume(resumeId, uniqueJobs);
+    try {
+      const existingJobs = await getJobsForResume(resumeId);
+      const newJobs = [...existingJobs, ...scoredJobs];
+      const uniqueJobs = Array.from(
+        new Map(newJobs.map((job) => [job.url, job])).values(),
+      );
+      await saveJobsForResume(resumeId, uniqueJobs);
+      
+      if (hasErrors && scoredJobs.length === 0) {
+        chrome.runtime.sendMessage({ 
+          type: "JOB_MATCHING_FAILURE", 
+          error: "Failed to score any jobs. Please check your AI provider configuration." 
+        });
+      } else if (hasErrors) {
+        chrome.runtime.sendMessage({ 
+          type: "JOB_MATCHING_PARTIAL", 
+          message: "Some jobs failed to score, but found valid matches." 
+        });
+      }
+    } catch (error) {
+      console.error("Failed to save jobs:", error);
+      chrome.runtime.sendMessage({ 
+        type: "JOB_MATCHING_FAILURE", 
+        error: "Failed to save job results" 
+      });
+    }
   }
 
   chrome.runtime.sendMessage({ type: "JOB_MATCHING_COMPLETE" });
@@ -356,6 +410,11 @@ async function handleGenerateResumeForJob(job: any, resumeId: string) {
   const profile = await getUserProfile();
   if (!profile) {
     console.error("Could not find user profile.");
+    chrome.runtime.sendMessage({ 
+      type: "RESUME_GENERATION_FAILURE", 
+      job: job,
+      error: "User profile not found" 
+    });
     chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE", job: job });
     return;
   }
@@ -364,34 +423,65 @@ async function handleGenerateResumeForJob(job: any, resumeId: string) {
 
   if (!resume) {
     console.error("Could not find the specified resume to generate a new one.");
+    chrome.runtime.sendMessage({ 
+      type: "RESUME_GENERATION_FAILURE", 
+      job: job,
+      error: "Resume not found" 
+    });
     chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE", job: job });
     return;
   }
 
-  const newResumeText = await generateResumeForJob(job, resume.text);
+  try {
+    const result = await generateResumeForJob(job, resume.text);
 
-  if (newResumeText) {
-    const newResume = {
-      id: `resume-${Date.now()}`,
-      name: `${resume.name} for ${job.title}`,
-      text: newResumeText,
-      createdAt: new Date().toISOString(),
-    };
-
-    if (!profile.resumes) {
-      profile.resumes = [];
+    if (result && typeof result === 'object' && 'error' in result) {
+      console.error("Failed to generate resume:", (result as any).error);
+      chrome.runtime.sendMessage({ 
+        type: "RESUME_GENERATION_FAILURE", 
+        job: job,
+        error: (result as any).error.message 
+      });
+      chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE", job: job });
+      return;
     }
-    profile.resumes.push(newResume);
-    await saveUserProfile(profile);
 
-    chrome.runtime.sendMessage({
-      type: "RESUME_GENERATION_SUCCESS",
-      resumeText: newResumeText,
+    if (typeof result === 'string' && result) {
+      const newResume = {
+        id: `resume-${Date.now()}`,
+        name: `${resume.name} for ${job.title}`,
+        text: result,
+        createdAt: new Date().toISOString(),
+      };
+
+      if (!profile.resumes) {
+        profile.resumes = [];
+      }
+      profile.resumes.push(newResume);
+      await saveUserProfile(profile);
+
+      chrome.runtime.sendMessage({
+        type: "RESUME_GENERATION_SUCCESS",
+        resumeText: result,
+        job: job,
+      });
+    } else {
+      chrome.runtime.sendMessage({ 
+        type: "RESUME_GENERATION_FAILURE", 
+        job: job,
+        error: "No content generated" 
+      });
+    }
+  } catch (error) {
+    console.error("Error generating resume:", error);
+    chrome.runtime.sendMessage({ 
+      type: "RESUME_GENERATION_FAILURE", 
       job: job,
+      error: error instanceof Error ? error.message : "Unknown error" 
     });
-  } else {
-    chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE", job: job });
   }
+  
+  chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE", job: job });
 }
 
 function Uint8ArrayToBase64(array: Uint8Array) {
@@ -425,7 +515,11 @@ async function handleGenerateCoverLetterForJob(job: any, resumeId: string) {
   const profile = await getUserProfile();
   if (!profile) {
     console.error("Could not find user profile.");
-    chrome.runtime.sendMessage({ type: "COVER_LETTER_GENERATION_FAILURE", job: job });
+    chrome.runtime.sendMessage({ 
+      type: "COVER_LETTER_GENERATION_FAILURE", 
+      job: job,
+      error: "User profile not found" 
+    });
     return;
   }
 
@@ -435,20 +529,47 @@ async function handleGenerateCoverLetterForJob(job: any, resumeId: string) {
     console.error(
       "Could not find the specified resume to generate a cover letter.",
     );
-    chrome.runtime.sendMessage({ type: "COVER_LETTER_GENERATION_FAILURE", job: job });
+    chrome.runtime.sendMessage({ 
+      type: "COVER_LETTER_GENERATION_FAILURE", 
+      job: job,
+      error: "Resume not found" 
+    });
     return;
   }
 
-  const coverLetter = await generateCoverLetterForJob(job, resume.text);
+  try {
+    const result = await generateCoverLetterForJob(job, resume.text);
 
-  if (coverLetter) {
-    chrome.runtime.sendMessage({
-      type: "COVER_LETTER_GENERATION_SUCCESS",
-      coverLetter: coverLetter,
+    if (result && typeof result === 'object' && 'error' in result) {
+      console.error("Failed to generate cover letter:", (result as any).error);
+      chrome.runtime.sendMessage({ 
+        type: "COVER_LETTER_GENERATION_FAILURE", 
+        job: job,
+        error: (result as any).error.message 
+      });
+      return;
+    }
+
+    if (typeof result === 'string' && result) {
+      chrome.runtime.sendMessage({
+        type: "COVER_LETTER_GENERATION_SUCCESS",
+        coverLetter: result,
+        job: job,
+      });
+    } else {
+      chrome.runtime.sendMessage({ 
+        type: "COVER_LETTER_GENERATION_FAILURE", 
+        job: job,
+        error: "No content generated" 
+      });
+    }
+  } catch (error) {
+    console.error("Error generating cover letter:", error);
+    chrome.runtime.sendMessage({ 
+      type: "COVER_LETTER_GENERATION_FAILURE", 
       job: job,
+      error: error instanceof Error ? error.message : "Unknown error" 
     });
-  } else {
-    chrome.runtime.sendMessage({ type: "COVER_LETTER_GENERATION_FAILURE", job: job });
   }
 }
 

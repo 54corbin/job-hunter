@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Settings Design Demo</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scale-in {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in { animation: fade-in 0.2s ease-out; }
+        .animate-scale-in { animation: scale-in 0.2s ease-out; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState } = React;
+        
+        function ModernModal() {
+            const [isOpen, setIsOpen] = useState(true);
+            
+            return (
+                <div className="min-h-screen bg-gray-100 p-4">
+                    {/* Demo Content */}
+                    <div className="max-w-4xl mx-auto space-y-8 p-8">
+                        <h1 className="text-5xl font-bold text-center bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                            Modern Settings Design
+                        </h1>
+                        
+                        <div className="p-8 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2 bg-blue-100 rounded-lg">
+                                    <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                </div>
+                                <h2 className="text-3xl font-bold text-slate-800">AI Provider Settings</h2>
+                            </div>
+                            
+                            {/* Provider Card */}
+                            <div className="p-6 bg-white/60 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-sm mb-4">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <select className="p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm">
+                                        <option>OpenAI</option>
+                                        <option>Gemini</option>
+                                        <option>Ollama</option>
+                                    </select>
+                                    <input 
+                                        type="password" 
+                                        placeholder="API Key"
+                                        className="p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
+                                    />
+                                    <select className="p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm md:col-span-2">
+                                        <option>gpt-4o-mini</option>
+                                        <option>gpt-4</option>
+                                        <option>gpt-3.5-turbo</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-center justify-between mt-4">
+                                    <button className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200">
+                                        Set as Active
+                                    </button>
+                                    <button className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <button className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add Provider
+                            </button>
+                        </div>
+                        
+                        {/* Save Button */}
+                        <div className="flex justify-center">
+                            <button 
+                                className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                </svg>
+                                Save Settings
+                            </button>
+                        </div>
+                        
+                        <div className="text-center">
+                            <p className="text-slate-600 mb-4">✨ Modern design with glass morphism effects, smooth animations, and improved UX</p>
+                            <button 
+                                onClick={() => setIsOpen(true)}
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200"
+                            >
+                                View Modern Modal
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {/* Modern Modal */}
+                    {isOpen && (
+                        <div
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            {/* Animated backdrop */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/70 to-slate-900/80 backdrop-blur-sm animate-fade-in" />
+                            
+                            {/* Modal content with glass morphism effect */}
+                            <div
+                                className="relative w-full max-w-lg transform transition-all duration-300 ease-out animate-scale-in"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-xl shadow-2xl border border-white/20">
+                                    {/* Gradient border effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-2xl" />
+                                    <div className="absolute inset-[1px] bg-white/95 rounded-2xl" />
+                                    
+                                    {/* Close button */}
+                                    <button
+                                        onClick={() => setIsOpen(false)}
+                                        className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100/80 hover:bg-slate-200/80 transition-all duration-200 group"
+                                    >
+                                        <svg className="w-4 h-4 text-slate-500 group-hover:text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                    
+                                    {/* Content */}
+                                    <div className="relative">
+                                        <div className="flex items-start justify-between p-8 pb-6 border-b border-slate-100">
+                                            <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent leading-tight tracking-tight">
+                                                Success!
+                                            </h2>
+                                        </div>
+                                        <div className="px-8 py-6">
+                                            <p className="text-lg text-slate-600 leading-relaxed">
+                                                Settings saved successfully! Your AI provider configuration has been updated.
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center justify-end gap-4 px-8 py-6 bg-slate-50/50 border-t border-slate-100">
+                                            <button 
+                                                onClick={() => setIsOpen(false)}
+                                                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none transform hover:scale-105 active:scale-95 h-11 px-6 py-3 text-sm bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 focus:ring-green-500 shadow-lg hover:shadow-xl"
+                                            >
+                                                Got it!
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<ModernModal />, document.getElementById('root'));
+    </script>
+</body>
+</html>

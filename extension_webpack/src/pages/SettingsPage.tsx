@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getUserProfile, saveUserProfile, UserProfile, ApiProvider } from '../services/storageService';
 import { listModels } from '../services/llmService';
+import { useNotifications } from '../components/NotificationProvider';
 import { FiSave, FiKey, FiToggleLeft, FiToggleRight, FiLock, FiPlus, FiTrash2, FiCpu, FiDownloadCloud } from 'react-icons/fi';
 import { ConfirmModal } from '../components/ConfirmModal';
 
@@ -19,6 +20,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
   const [modalContent, setModalContent] = useState({ title: '', message: '', onConfirm: () => {} });
   const [providerModels, setProviderModels] = useState<{ [providerId: string]: string[] }>({});
 
+  const { showError, showSuccess, showWarning, showInfo } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -85,7 +87,20 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
     try {
       if (profile) {
         if (!profile.settings.activeAiProviderId || profile.settings.apiProviders?.length === 0) {
-          showModal("AI Provider Required", "Please add and set an active AI provider before saving.");
+          showWarning(
+            'AI Provider Required',
+            'Please add and set an active AI provider before saving.',
+            {
+              action: {
+                label: 'Add Provider',
+                onClick: () => {
+                  // Focus on the add provider section
+                  const addButton = document.querySelector('[data-testid="add-provider"]') as HTMLElement;
+                  if (addButton) addButton.click();
+                },
+              },
+            }
+          );
           return;
         }
 
@@ -94,10 +109,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
           if (passcode || confirmPasscode) {
             if (passcode.length !== 4 || confirmPasscode.length !== 4) {
               setPasscodeError("Passcode must be 4 digits.");
+              showError('Invalid Passcode', 'Passcode must be exactly 4 digits.');
               return;
             }
             if (passcode !== confirmPasscode) {
               setPasscodeError("Passcodes do not match.");
+              showError('Passcode Mismatch', 'The passcodes you entered do not match.');
               return;
             }
             profileToSave.settings.passcode = passcode;
@@ -107,19 +124,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
         }
 
         saveUserProfile(profileToSave).then(() => {
-          showModal("Success", "Settings saved successfully!");
+          showSuccess('Settings Saved', 'Your settings have been saved successfully!');
           setPasscode("");
           setConfirmPasscode("");
           setPasscodeError("");
           onSettingsSave();
         }).catch((error) => {
           console.error("Failed to save settings:", error);
-          showModal("Error", "Failed to save settings. Please try again.");
+          showError('Save Failed', 'Failed to save settings. Please try again.');
         });
       }
     } catch (error) {
       console.error("Error in handleSave:", error);
-      showModal("Error", "An unexpected error occurred. Please try again.");
+      showError('Unexpected Error', 'An unexpected error occurred. Please try again.');
     }
   };
 
@@ -128,6 +145,18 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
       const newProviders = [...(profile.settings.apiProviders || [])];
       const oldProvider = newProviders[index];
       newProviders[index] = { ...newProviders[index], [field]: value };
+
+      // Validate API key changes
+      if (field === 'apiKey' && value && !value.trim()) {
+        showWarning('API Key Required', 'Please enter a valid API key.');
+        return;
+      }
+
+      // Validate model changes  
+      if (field === 'model' && !value && oldProvider.name !== 'Ollama') {
+        showWarning('Model Required', 'Please select a model for your API provider.');
+        return;
+      }
 
       if (field === 'name' && oldProvider.name !== value) {
         // Reset model and set default host for Ollama
@@ -139,11 +168,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
         } else if (value === 'Ollama') {
           defaultModel = 'llama3';
           newProviders[index].apiKey = 'http://localhost:11434';
+          showInfo('Ollama Configured', 'Default Ollama host (localhost:11434) has been set. Make sure Ollama is running.');
         }
         newProviders[index].model = defaultModel;
       }
 
-      setProfile({ ...profile, settings: { ...profile.settings, apiProviders: newProviders } });
+      const updatedProfile = { 
+        ...profile, 
+        settings: { 
+          ...profile.settings, 
+          apiProviders: newProviders 
+        } 
+      };
+      setProfile(updatedProfile);
     }
   };
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { IconType } from 'react-icons';
+import { useNotifications } from '../NotificationProvider';
 
 export interface NavigationItem {
   name: string;
@@ -16,11 +17,22 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ title, navigation, onRedirectToSettings, isConfigured }) => {
+  const { showWarning } = useNotifications();
+
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href !== '/settings' && !isConfigured) {
       e.preventDefault();
-      alert('Please configure an AI provider in Settings before proceeding.');
-      onRedirectToSettings();
+      showWarning(
+        'Configuration Required',
+        'Please configure an AI provider in Settings before proceeding.',
+        {
+          action: {
+            label: 'Go to Settings',
+            onClick: onRedirectToSettings,
+          },
+          duration: 6000,
+        }
+      );
     }
   };
 

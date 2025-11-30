@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiExternalLink, FiMapPin, FiFileText, FiLoader, FiMail, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { getUserProfile, UserProfile, Resume, getJobsForResume, saveUserProfile } from '../services/storageService';
 import { fetchLocationSuggestions, LocationSuggestion } from '../services/seekService';
+import { useNotifications } from '../components/NotificationProvider';
 
 import ResumeReviewModal from '../components/ResumeReviewModal';
 import CoverLetterReviewModal from '../components/CoverLetterReviewModal';
@@ -33,6 +35,9 @@ const JobsPage: React.FC = () => {
   const [daterange, setDaterange] = useState('');
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [newKeyword, setNewKeyword] = useState('');
+
+  const navigate = useNavigate();
+  const { showError, showSuccess, showWarning, showInfo } = useNotifications();
 
   const workTypesMap: { [key: string]: string } = {
     "Full-time": "242",
@@ -135,6 +140,28 @@ const JobsPage: React.FC = () => {
       } else if (message.type === "JOB_MATCHING_COMPLETE") {
         setIsMatching(false);
         setMatchingProgress(0);
+      } else if (message.type === "JOB_MATCHING_FAILURE") {
+        setIsMatching(false);
+        setMatchingProgress(0);
+        showError(
+          'Job Search Failed',
+          message.error || 'An error occurred while searching for jobs. Please try again.',
+          {
+            action: {
+              label: 'Retry',
+              onClick: handleDiscoverJobs,
+            },
+            duration: 8000,
+          }
+        );
+      } else if (message.type === "JOB_MATCHING_PARTIAL") {
+        setIsMatching(false);
+        setMatchingProgress(0);
+        showWarning(
+          'Partial Results',
+          message.message || 'Some jobs failed to score, but found valid matches.',
+          { duration: 6000 }
+        );
       } else if (message.type === "RESUME_GENERATION_COMPLETE") {
         setGeneratingAction(prev => (message.job && prev?.jobId === message.job.id ? null : prev));
       } else if (message.type === "RESUME_GENERATION_SUCCESS") {
@@ -146,12 +173,36 @@ const JobsPage: React.FC = () => {
           const cacheKey = `generated-resume-${selectedResumeId}-${message.job.id}`;
           chrome.storage.local.set({ [cacheKey]: message.resumeText });
         }
+      } else if (message.type === "RESUME_GENERATION_FAILURE") {
+        setGeneratingAction(prev => (message.job && prev?.jobId === message.job.id ? null : prev));
+        showError(
+          'Resume Generation Failed',
+          message.error || 'Failed to generate resume. Please check your AI provider configuration.',
+          {
+            action: {
+              label: 'Go to Settings',
+              onClick: () => navigate('/settings'),
+            },
+            duration: 8000,
+          }
+        );
       } else if (message.type === "COVER_LETTER_GENERATION_SUCCESS") {
         setGeneratingAction(prev => (message.job && prev?.jobId === message.job.id ? null : prev));
         setGeneratedCoverLetterText(message.coverLetter);
         setCoverLetterReviewModalOpen(true);
       } else if (message.type === "COVER_LETTER_GENERATION_FAILURE") {
         setGeneratingAction(prev => (message.job && prev?.jobId === message.job.id ? null : prev));
+        showError(
+          'Cover Letter Generation Failed',
+          message.error || 'Failed to generate cover letter. Please check your AI provider configuration.',
+          {
+            action: {
+              label: 'Go to Settings',
+              onClick: () => navigate('/settings'),
+            },
+            duration: 8000,
+          }
+        );
       }
     };
     chrome.runtime.onMessage.addListener(messageListener);

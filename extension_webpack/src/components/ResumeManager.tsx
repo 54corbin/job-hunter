@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import SimpleLoadingOverlay from './SimpleLoadingOverlay';
 import { UserProfile, Resume, saveUserProfile } from '../services/storageService';
 import { extractProfileFromResume, extractKeywordsFromResume } from '../services/llmService';
+import { useNotifications } from './NotificationProvider';
 import { FiUpload, FiEdit, FiTrash2, FiSave, FiXCircle } from 'react-icons/fi';
 import { ConfirmModal } from './ConfirmModal';
 
@@ -23,6 +24,8 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const { showError, showSuccess, showInfo, showWarning } = useNotifications();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,10 +76,28 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
   };
 
   const processResume = async (file: File, fileData: string, text: string) => {
-    const [extractedProfile, keywords] = await Promise.all([
-      extractProfileFromResume(text),
-      extractKeywordsFromResume(text),
-    ]);
+    let extractedProfile: any;
+    let keywords: string[] = [];
+
+    // Extract profile information
+    const profileResult = await extractProfileFromResume(text);
+    if ('error' in profileResult) {
+      console.error('Failed to extract profile from resume:', profileResult.error);
+      showWarning('Profile Extraction Failed', 'Could not extract profile information, but resume was saved.');
+      extractedProfile = null;
+    } else {
+      extractedProfile = profileResult;
+    }
+
+    // Extract keywords
+    const keywordsResult = await extractKeywordsFromResume(text);
+    if ('error' in keywordsResult) {
+      console.error('Failed to extract keywords from resume:', keywordsResult.error);
+      showWarning('Keyword Extraction Failed', 'Could not extract keywords for job searching.');
+      keywords = [];
+    } else {
+      keywords = keywordsResult;
+    }
 
     const newResume: Resume = {
       id: new Date().toISOString(),
@@ -110,9 +131,16 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
       updatedProfile.settings.activeResumeId = newResume.id;
     }
     
-    onProfileUpdate(updatedProfile);
-    await saveUserProfile(updatedProfile);
-    setLoading(false);
+    try {
+      await saveUserProfile(updatedProfile);
+      onProfileUpdate(updatedProfile);
+      showSuccess('Resume Uploaded', 'Your resume has been uploaded and processed successfully.');
+    } catch (error) {
+      console.error('Failed to save resume:', error);
+      showError('Upload Failed', 'Failed to save your resume. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRename = (resume: Resume) => {
@@ -125,8 +153,16 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
       r.id === resumeId ? { ...r, name: newName } : r
     );
     const updatedProfile = { ...profile, resumes: updatedResumes };
-    onProfileUpdate(updatedProfile);
-    await saveUserProfile(updatedProfile);
+    
+    try {
+      await saveUserProfile(updatedProfile);
+      onProfileUpdate(updatedProfile);
+      showSuccess('Resume Renamed', 'Resume name has been updated successfully.');
+    } catch (error) {
+      console.error('Failed to rename resume:', error);
+      showError('Rename Failed', 'Failed to rename resume. Please try again.');
+    }
+    
     setEditingResumeId(null);
     setNewName('');
   };
@@ -134,30 +170,45 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
   const handleSelectResume = async (resumeId: string) => {
     const selectedResume = profile.resumes?.find(r => r.id === resumeId);
     if (selectedResume) {
-      let extractedProfile = selectedResume.parsedInfo;
-      let profileToUpdate = { ...profile };
+      try {
+        let extractedProfile = selectedResume.parsedInfo;
+        let profileToUpdate = { ...profile };
 
-      if (!extractedProfile) {
-        const parsed = await extractProfileFromResume(selectedResume.text);
-        extractedProfile = parsed || undefined;
-        const updatedResumes = profile.resumes?.map(r => 
-          r.id === resumeId ? { ...r, parsedInfo: extractedProfile } : r
-        );
-        profileToUpdate = { ...profile, resumes: updatedResumes };
-      }
+        if (!extractedProfile) {
+          const result = await extractProfileFromResume(selectedResume.text);
+          
+          if (result && typeof result === 'object' && 'error' in result) {
+            console.error('Failed to extract profile from resume:', (result as any).error);
+            showError('Profile Extraction Failed', (result as any).error.message || 'Failed to extract profile information from resume.');
+            extractedProfile = undefined;
+          } else {
+            extractedProfile = result as any;
+          }
+          
+          const updatedResumes = profile.resumes?.map(r => 
+            r.id === resumeId ? { ...r, parsedInfo: extractedProfile } : r
+          );
+          profileToUpdate = { ...profile, resumes: updatedResumes };
+        }
 
-      let finalProfile = { ...profileToUpdate, settings: { ...profileToUpdate.settings, activeResumeId: resumeId } };
-      if (extractedProfile) {
-        finalProfile = {
-          ...finalProfile,
-          personalInfo: extractedProfile.personalInfo || finalProfile.personalInfo,
-          experience: extractedProfile.experience || finalProfile.experience,
-          education: extractedProfile.education || finalProfile.education,
-          skills: extractedProfile.skills || finalProfile.skills,
-        };
+        let finalProfile = { ...profileToUpdate, settings: { ...profileToUpdate.settings, activeResumeId: resumeId } };
+        if (extractedProfile) {
+          finalProfile = {
+            ...finalProfile,
+            personalInfo: extractedProfile.personalInfo || finalProfile.personalInfo,
+            experience: extractedProfile.experience || finalProfile.experience,
+            education: extractedProfile.education || finalProfile.education,
+            skills: extractedProfile.skills || finalProfile.skills,
+          };
+        }
+        
+        await saveUserProfile(finalProfile);
+        onProfileUpdate(finalProfile);
+        showSuccess('Resume Selected', 'Resume has been set as active and profile updated.');
+      } catch (error) {
+        console.error('Failed to select resume:', error);
+        showError('Selection Failed', 'Failed to select resume. Please try again.');
       }
-      onProfileUpdate(finalProfile);
-      await saveUserProfile(finalProfile);
     }
   };
 
@@ -168,21 +219,28 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
 
   const confirmDelete = async () => {
     if (resumeToDelete) {
-      const updatedResumes = profile.resumes?.filter(r => r.id !== resumeToDelete);
-      const updatedProfile = { ...profile, resumes: updatedResumes };
+      try {
+        const updatedResumes = profile.resumes?.filter(r => r.id !== resumeToDelete);
+        const updatedProfile = { ...profile, resumes: updatedResumes };
 
-      if (profile.settings.activeResumeId === resumeToDelete) {
-        if (updatedResumes && updatedResumes.length === 1) {
-          updatedProfile.settings.activeResumeId = updatedResumes[0].id;
-        } else {
-          updatedProfile.settings.activeResumeId = undefined;
+        if (profile.settings.activeResumeId === resumeToDelete) {
+          if (updatedResumes && updatedResumes.length === 1) {
+            updatedProfile.settings.activeResumeId = updatedResumes[0].id;
+          } else {
+            updatedProfile.settings.activeResumeId = undefined;
+          }
         }
-      }
 
-      onProfileUpdate(updatedProfile);
-      await saveUserProfile(updatedProfile);
-      setResumeToDelete(null);
-      setIsConfirmModalOpen(false);
+        await saveUserProfile(updatedProfile);
+        onProfileUpdate(updatedProfile);
+        showSuccess('Resume Deleted', 'Resume has been removed successfully.');
+        
+        setResumeToDelete(null);
+        setIsConfirmModalOpen(false);
+      } catch (error) {
+        console.error('Failed to delete resume:', error);
+        showError('Delete Failed', 'Failed to delete resume. Please try again.');
+      }
     }
   };
 

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copy Answer Fix Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 40px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .job-text {
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #4299e1;
+            cursor: text;
+            user-select: text;
+        }
+        .fix-info {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 30px;
+        }
+        .instructions {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>✅ Copy Answer Fix Verification</h1>
+        
+        <div class="fix-info">
+            <h3>🔧 Fix Applied</h3>
+            <p><strong>What was fixed:</strong></p>
+            <ul>
+                <li>✅ Added fallback copy method using <code>document.execCommand('copy')</code></li>
+                <li>✅ Modern clipboard API still used when available</li>
+                <li>✅ Better error handling and user feedback</li>
+                <li>✅ Works on HTTP and HTTPS sites</li>
+                <li>✅ Compatible with all browsers</li>
+            </ul>
+        </div>
+
+        <div class="instructions">
+            <h3>🧪 Test Instructions</h3>
+            <ol>
+                <li><strong>Load the extension</strong> - Make sure the Job Hunter extension is loaded in Chrome</li>
+                <li><strong>Select this text</strong> - Select any text below (minimum 10 characters)</li>
+                <li><strong>Click the AI icon</strong> - A blue "AI" icon should appear, click it</li>
+                <li><strong>Generate an answer</strong> - Click "🚀 Generate Answer" button</li>
+                <li><strong>Test copy button</strong> - Click the "📋 Copy Answer" button</li>
+                <li><strong>Verify success</strong> - You should see "✅ Answer copied to clipboard!" message</li>
+            </ol>
+            <p><strong>Expected Result:</strong> The answer text should be copied to your clipboard successfully.</p>
+        </div>
+
+        <div class="job-text">
+            <h3>Test Job Description:</h3>
+            <p>We are seeking a Senior Software Engineer with extensive experience in React, Node.js, and cloud technologies. The ideal candidate will have 5+ years of full-stack development experience, strong problem-solving skills, and the ability to work in a collaborative environment.</p>
+            
+            <p><strong>Key Requirements:</strong></p>
+            <ul>
+                <li>Strong JavaScript and TypeScript programming skills</li>
+                <li>Experience with React and modern frontend frameworks</li>
+                <li>Knowledge of cloud platforms (AWS, Azure, or GCP preferred)</li>
+                <li>Experience with microservices architecture</li>
+                <li>Excellent communication and teamwork abilities</li>
+            </ul>
+
+            <p><strong>Preferred Qualifications:</strong></p>
+            <ul>
+                <li>Master's degree in Computer Science or related field</li>
+                <li>Experience with DevOps and CI/CD pipelines</li>
+                <li>Knowledge of containerization technologies (Docker, Kubernetes)</li>
+                <li>Previous experience in a leadership or mentoring role</li>
+            </ul>
+        </div>
+
+        <div class="job-text">
+            <h3>Technical Interview Question:</h3>
+            <p>Describe your experience with designing and implementing scalable microservices architectures. How would you approach monitoring, logging, and error handling in a distributed system? What strategies would you use to ensure system reliability and performance?</p>
+        </div>
+
+        <div class="job-text">
+            <h3>Behavioral Question:</h3>
+            <p>Tell me about a time when you had to learn a new technology quickly to meet a project deadline. How did you approach the learning process, and what was the outcome?</p>
+        </div>
+    </div>
+</body>
+</html>

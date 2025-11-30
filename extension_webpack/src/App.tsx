@@ -10,6 +10,7 @@ import DesignSystemPage from './pages/DesignSystemPage';
 import AnswerGenerationPage from './pages/AnswerGenerationPage';
 import PasscodeComponent from './components/passcode/PasscodeComponent';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { NotificationProvider, withErrorHandling } from './components/NotificationProvider';
 import { getUserProfile, saveUserProfile } from './services/storageService';
 import CryptoJS from 'crypto-js';
 
@@ -74,6 +75,14 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
+      <NotificationProvider position="top-right" maxNotifications={3}>
+        <AppContent />
+      </NotificationProvider>
+    </ErrorBoundary>
+  );
+
+  function AppContent() {
+    const WrappedApp = withErrorHandling(() => (
       <>
         {isLocked && <PasscodeComponent onUnlock={handleUnlock} isError={passcodeError} />}
         <div className={isLocked ? 'blur-sm' : '' }>
@@ -104,8 +113,15 @@ const App: React.FC = () => {
           </Routes>
         </div>
       </>
-    </ErrorBoundary>
-  );
+    ), {
+      onError: (error, errorInfo) => {
+        // Additional error logging or reporting can go here
+        console.error('App-level error:', error, errorInfo);
+      }
+    });
+
+    return <WrappedApp />;
+  }
 };
 
 export default App;

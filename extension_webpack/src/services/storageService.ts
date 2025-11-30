@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js';
+import { handleServiceError } from './errorService';
 
 const ENCRYPTION_KEY = 'your-super-secret-key'; // In a real app, this should be managed more securely.
 
