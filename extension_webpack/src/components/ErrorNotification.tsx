@@ -87,15 +87,15 @@ const ErrorNotification: React.FC<ErrorNotificationProps> = ({ notification, onC
           <div className="flex-shrink-0">
             {getIcon()}
           </div>
-          <div className="ml-3 w-0 flex-1 pt-0.5">
-            <p className="text-sm font-medium break-words">{notification.title}</p>
-            <p className="mt-1 text-sm opacity-90 break-words leading-relaxed">{notification.message}</p>
+          <div className="ml-3 w-0 flex-1 pt-0.5 min-w-0">
+            <p className="text-sm font-medium whitespace-normal break-words">{notification.title}</p>
+            <p className="mt-1 text-sm opacity-90 leading-relaxed whitespace-normal break-words">{notification.message}</p>
             {notification.action && (
               <div className="mt-3">
                 <button
                   type="button"
                   onClick={notification.action.onClick}
-                  className="text-sm font-medium underline hover:no-underline break-words"
+                  className="text-sm font-medium underline hover:no-underline whitespace-normal break-words"
                 >
                   {notification.action.label}
                 </button>
