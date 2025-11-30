@@ -1,8 +1,8 @@
-# Privacy Policy for Offer Hunter
+# Privacy Policy for Job Hunter
 
 **Last Updated:** 2025-06-29
 
-This Privacy Policy describes how Offer Hunter ("we," "us," or "our") collects, uses, and discloses your information.
+This Privacy Policy describes how Job Hunter ("we," "us," or "our") collects, uses, and discloses your information.
 
 ## Information We Collect
 

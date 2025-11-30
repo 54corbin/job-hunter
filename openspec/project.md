@@ -1,7 +1,7 @@
 # Project Context
 
 ## Purpose
-Offer Hunter is a Chrome extension that automates and streamlines the job application process. It helps users manage multiple resumes, discover relevant job opportunities from job boards like Seek and LinkedIn, and generates AI-powered tailored content (resumes, cover letters, answers) for specific job applications.
+Job Hunter is a Chrome extension that automates and streamlines the job application process. It helps users manage multiple resumes, discover relevant job opportunities from job boards like Seek and LinkedIn, and generates AI-powered tailored content (resumes, cover letters, answers) for specific job applications.
 
 ## Tech Stack
 - **Frontend Framework**: React 19.1.1, React DOM, React Router DOM 7.7.1

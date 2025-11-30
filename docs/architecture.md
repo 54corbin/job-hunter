@@ -1,8 +1,8 @@
-# Offer Hunter Brownfield Architecture Document
+# Job Hunter Brownfield Architecture Document
 
 ## Introduction
 
-This document captures the CURRENT STATE of the Offer Hunter Chrome Extension codebase, focusing on the frontend architecture. It is specifically tailored to guide the UI/UX overhaul outlined in the `prd.md`. It serves as a reference for AI agents working on the enhancement.
+This document captures the CURRENT STATE of the Job Hunter Chrome Extension codebase, focusing on the frontend architecture. It is specifically tailored to guide the UI/UX overhaul outlined in the `prd.md`. It serves as a reference for AI agents working on the enhancement.
 
 ### Document Scope
 

@@ -1,5 +1,3 @@
-
-
 interface PopupState {
   isVisible: boolean;
   position: { x: number; y: number };
@@ -242,7 +240,7 @@ class AnswerGenerationManager {
     const popupHeight = 600;
     const centerX = (window.innerWidth - popupWidth) / 2;
     const topY = 20; // Fixed position at top of page
-    
+
     popupContent.style.left = `${Math.max(20, centerX)}px`;
     popupContent.style.top = `${topY}px`;
     popupContent.style.zIndex = "2147483647"; // Ensure it's always on top
@@ -314,22 +312,22 @@ class AnswerGenerationManager {
           <!-- Selected Text -->
           <div style="margin-bottom: 16px !important;">
             <div style="
-              display: flex !important; 
-              align-items: center !important; 
-              gap: 8px !important; 
+              display: flex !important;
+              align-items: center !important;
+              gap: 8px !important;
               margin-bottom: 8px !important;
             ">
               <div style="
-                width: 12px !important; 
-                height: 12px !important; 
-                background: #f59e0b !important; 
+                width: 12px !important;
+                height: 12px !important;
+                background: #f59e0b !important;
                 border-radius: 50% !important;
                 animation: pulse 2s infinite !important;
               "></div>
               <label style="
-                display: block !important; 
-                font-size: 14px !important; 
-                font-weight: 600 !important; 
+                display: block !important;
+                font-size: 14px !important;
+                font-weight: 600 !important;
                 color: #92400e !important;
               ">
                 📝 Selected Text
@@ -358,9 +356,9 @@ class AnswerGenerationManager {
                 HIGHLIGHTED
               </div>
               <p id="selected-text-display" style="
-                margin: 0 !important; 
-                font-size: 14px !important; 
-                color: #92400e !important; 
+                margin: 0 !important;
+                font-size: 14px !important;
+                color: #92400e !important;
                 font-style: italic !important;
                 line-height: 1.4 !important;
                 margin-top: 8px !important;
@@ -514,41 +512,41 @@ class AnswerGenerationManager {
             position: relative !important;
           ">
             <div style="
-              display: flex !important; 
-              align-items: center !important; 
-              gap: 8px !important; 
+              display: flex !important;
+              align-items: center !important;
+              gap: 8px !important;
               margin-bottom: 8px !important;
             ">
               <div style="
-                width: 12px !important; 
-                height: 12px !important; 
-                background: #10b981 !important; 
+                width: 12px !important;
+                height: 12px !important;
+                background: #10b981 !important;
                 border-radius: 50% !important;
                 animation: pulse 2s infinite !important;
               "></div>
               <span style="
-                font-size: 14px !important; 
-                font-weight: 600 !important; 
+                font-size: 14px !important;
+                font-weight: 600 !important;
                 color: #1e40af !important;
               ">
                 🎯 Active Resume Profile
               </span>
             </div>
             <p id="resume-info" style="
-              margin: 0 !important; 
-              font-size: 13px !important; 
-              color: #1e3a8a !important; 
+              margin: 0 !important;
+              font-size: 13px !important;
+              color: #1e3a8a !important;
               line-height: 1.4 !important;
             "></p>
             <div style="
-              display: flex !important; 
-              align-items: center !important; 
-              gap: 8px !important; 
+              display: flex !important;
+              align-items: center !important;
+              gap: 8px !important;
               margin-top: 8px !important;
             ">
               <p id="relevance-score" style="
-                margin: 0 !important; 
-                font-size: 11px !important; 
+                margin: 0 !important;
+                font-size: 11px !important;
                 color: #059669 !important;
                 background: rgba(16, 185, 129, 0.1) !important;
                 padding: 2px 6px !important;
@@ -557,7 +555,7 @@ class AnswerGenerationManager {
               "></p>
             </div>
           </div>
-          
+
           <!-- Scroll Indicator -->
           <div style="
             text-align: center !important;
@@ -567,8 +565,8 @@ class AnswerGenerationManager {
             margin: 0 -16px -16px -16px !important;
           ">
             <p style="
-              margin: 0 !important; 
-              font-size: 11px !important; 
+              margin: 0 !important;
+              font-size: 11px !important;
               color: #64748b !important;
               display: flex !important;
               align-items: center !important;
@@ -635,14 +633,16 @@ class AnswerGenerationManager {
   private setupCopyButton(): void {
     // Wait for DOM to be ready
     setTimeout(() => {
-      const copyBtn = document.getElementById("copy-answer-btn") as HTMLButtonElement;
-      
+      const copyBtn = document.getElementById(
+        "copy-answer-btn",
+      ) as HTMLButtonElement;
+
       if (copyBtn) {
         // Add direct event listener as backup
         copyBtn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
-          
+
           // Call copyAnswer method
           this.copyAnswer();
         });
@@ -655,8 +655,10 @@ class AnswerGenerationManager {
   private setupGenerateButton(): void {
     // Wait a bit for DOM to be ready
     setTimeout(() => {
-      const generateBtn = document.getElementById("generate-btn") as HTMLButtonElement;
-      
+      const generateBtn = document.getElementById(
+        "generate-btn",
+      ) as HTMLButtonElement;
+
       if (generateBtn) {
         // Add a direct event listener as fallback
         generateBtn.addEventListener("click", (e) => {
@@ -718,47 +720,54 @@ class AnswerGenerationManager {
       ) {
         // Fetch user profile from storage
         const profile = await this.getUserProfileFromStorage();
-        
+
         if (profile && profile.resumes && profile.resumes.length > 0) {
           // Find the active resume
           const activeResumeId = profile.settings?.activeResumeId;
-          const activeResume = profile.resumes.find((r: any) => r.id === activeResumeId) || profile.resumes[0];
-          
+          const activeResume =
+            profile.resumes.find((r: any) => r.id === activeResumeId) ||
+            profile.resumes[0];
+
           if (activeResume) {
             // Display resume information
             const personalInfo = activeResume.parsedInfo?.personalInfo;
             const skills = activeResume.parsedInfo?.skills || [];
             const experience = activeResume.parsedInfo?.experience || [];
-            
+
             let infoText = `Using "${activeResume.name}" as active resume`;
-            
+
             if (personalInfo?.name) {
               infoText += ` • ${personalInfo.name}`;
             }
-            
+
             if (experience.length > 0) {
               const latestExp = experience[0];
               infoText += ` • ${latestExp.title} at ${latestExp.company}`;
             }
-            
+
             if (skills.length > 0) {
               const topSkills = skills.slice(0, 3).join(", ");
               infoText += ` • Skills: ${topSkills}`;
             }
-            
+
             resumeInfo.textContent = infoText;
-            
+
             // Calculate relevance based on resume content vs selected text
-            const relevance = this.calculateRelevanceScore(selectedText, activeResume.text, skills);
+            const relevance = this.calculateRelevanceScore(
+              selectedText,
+              activeResume.text,
+              skills,
+            );
             relevanceScore.textContent = `✓ ${relevance}% relevance based on your background`;
-            
+
             (resumeContext as HTMLElement).style.display = "block";
           } else {
             // No active resume found
           }
         } else {
           // No resumes found
-          resumeInfo.textContent = "No resume profile found. Upload a resume to enable personalized responses.";
+          resumeInfo.textContent =
+            "No resume profile found. Upload a resume to enable personalized responses.";
           relevanceScore.textContent = "";
           (resumeContext as HTMLElement).style.display = "block";
         }
@@ -766,7 +775,9 @@ class AnswerGenerationManager {
     } catch (error) {
       console.error("Error loading resume context:", error);
       // Hide the resume context section on error
-      const resumeContext = document.getElementById("resume-context") as HTMLElement;
+      const resumeContext = document.getElementById(
+        "resume-context",
+      ) as HTMLElement;
       if (resumeContext) {
         resumeContext.style.display = "none";
       }
@@ -784,38 +795,47 @@ class AnswerGenerationManager {
           }
         });
       } else {
-        console.warn("chrome.storage.local is not available. Cannot fetch resume context.");
+        console.warn(
+          "chrome.storage.local is not available. Cannot fetch resume context.",
+        );
         resolve(null);
       }
     });
   }
 
-  private calculateRelevanceScore(selectedText: string, resumeText: string, skills: string[]): number {
+  private calculateRelevanceScore(
+    selectedText: string,
+    resumeText: string,
+    skills: string[],
+  ): number {
     let score = 0;
     const selectedWords = selectedText.toLowerCase().split(/\s+/);
     const resumeWords = resumeText.toLowerCase().split(/\s+/);
-    
+
     // Check for skill matches
-    const skillMatches = skills.filter(skill => 
-      selectedText.toLowerCase().includes(skill.toLowerCase())
+    const skillMatches = skills.filter((skill) =>
+      selectedText.toLowerCase().includes(skill.toLowerCase()),
     ).length;
     score += Math.min(skillMatches * 20, 60); // Max 60% from skills
-    
+
     // Check for keyword matches
-    const keywordMatches = selectedWords.filter(word => 
-      word.length > 3 && resumeWords.some(resumeWord => resumeWord.includes(word))
+    const keywordMatches = selectedWords.filter(
+      (word) =>
+        word.length > 3 &&
+        resumeWords.some((resumeWord) => resumeWord.includes(word)),
     ).length;
     score += Math.min(keywordMatches * 2, 30); // Max 30% from keywords
-    
+
     // Base score for having relevant content
-    if (score === 0 && (
-      selectedText.includes("job") || 
-      selectedText.includes("position") || 
-      selectedText.includes("experience")
-    )) {
+    if (
+      score === 0 &&
+      (selectedText.includes("job") ||
+        selectedText.includes("position") ||
+        selectedText.includes("experience"))
+    ) {
       score = 40; // Base relevance for job-related content
     }
-    
+
     return Math.min(Math.max(score, 25), 95); // Clamp between 25% and 95%
   }
 
@@ -876,24 +896,60 @@ class AnswerGenerationManager {
       ) as HTMLElement;
       const tone = toneButton?.getAttribute("data-value") || "professional";
 
-      // Create prompt based on template and settings
-      const prompt = this.createPrompt(template, tone);
+      // Map template to question type
+      const questionTypeMap: {
+        [key: string]: "general" | "interview" | "application" | "technical";
+      } = {
+        "job-application": "application",
+        "technical-question": "technical",
+        "interview-response": "interview",
+        "general-explanation": "general",
+      };
 
-      // Simulate API call (replace with actual implementation)
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // 2 second delay
+      const questionType = questionTypeMap[template] || "general";
 
-      // Generate mock answer based on template
-      const answer = this.generateMockAnswer(template, tone);
+      // Send message to background script to generate answer using AI service
+      const response = await new Promise<{ answer?: string; error?: string }>(
+        (resolve) => {
+          chrome.runtime.sendMessage(
+            {
+              type: "GENERATE_AI_ANSWER",
+              data: {
+                selectedText: this.popupState.selectedText,
+                questionType,
+                context: `Tone: ${tone}, Template: ${template}`,
+              },
+            },
+            (response) => {
+              resolve(
+                response || { error: "No response from background script" },
+              );
+            },
+          );
+        },
+      );
 
-      // Display answer
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      if (!response.answer) {
+        throw new Error("No answer generated");
+      }
+
+      // Display AI-generated answer
       const answerElement = document.getElementById(
         "generated-answer",
       ) as HTMLParagraphElement;
-      answerElement.textContent = answer;
+      answerElement.textContent = response.answer;
       (answerSection as HTMLElement).style.display = "block";
     } catch (error) {
       console.error("Answer generation error:", error);
-      errorMsg.textContent = "Failed to generate answer. Please try again.";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to generate answer. Please try again.";
+      errorMsg.textContent = errorMessage;
       (errorDiv as HTMLElement).style.display = "block";
     } finally {
       (generateBtn as HTMLElement).style.display = "block";
@@ -905,13 +961,13 @@ class AnswerGenerationManager {
     const selectedText = this.popupState.selectedText;
 
     const prompts = {
-      "job-application": `You are a professional career coach. Generate a compelling response for a job application based on this text: "${selectedText}". Use a ${tone} tone and highlight relevant qualifications and experience.`,
+      "job-application": `You are a professional career coach. Generate a compelling response for a job application based on this text: "${selectedText}". Use a ${tone} tone and highlight relevant qualifications and experience. Please response with your answers only and must don't contain prefix/leading words and please in plain text.`,
 
-      "technical-question": `You are a technical expert. Provide a detailed explanation of this technical concept: "${selectedText}". Use a ${tone} tone with specific examples and clear explanations.`,
+      "technical-question": `You are a technical expert. Provide a detailed explanation of this technical concept: "${selectedText}". Use a ${tone} tone with specific examples and clear explanations. Please response with your answers only and must don't contain prefix/leading words and please in plain text.`,
 
-      "interview-response": `You are an interview coach. Help craft a thoughtful response to this interview question: "${selectedText}". Use the STAR method and a ${tone} tone to showcase relevant experience.`,
+      "interview-response": `You are an interview coach. Help craft a thoughtful response to this interview question: "${selectedText}". Use the STAR method and a ${tone} tone to showcase relevant experience. Please response with your answers only and must don't contain prefix/leading words and please in plain text.`,
 
-      "general-explanation": `You are a helpful assistant. Provide a clear, informative explanation about: "${selectedText}". Use a ${tone} tone and make it easy to understand.`,
+      "general-explanation": `You are a helpful assistant. Provide a clear, informative explanation about: "${selectedText}". Use a ${tone} tone and make it easy to understand.Answer in plain text. Please response with your answers only and must don't contain prefix/leading words and please in plain text.`,
     };
 
     return (
@@ -920,87 +976,18 @@ class AnswerGenerationManager {
     );
   }
 
-  private generateMockAnswer(template: string, tone: string): string {
-    const answers = {
-      "job-application": `Based on the requirements you've outlined, I believe I would be an excellent fit for this position. My background includes extensive experience in project management, team leadership, and strategic planning - all key areas you've mentioned as important for success in this role.
-
-In my previous position, I successfully managed cross-functional teams of 15+ members, delivering complex projects on time and under budget. This experience has given me strong skills in communication, problem-solving, and stakeholder management that directly align with what you're looking for.
-
-I'm particularly excited about the opportunity to contribute to your organization's growth and would welcome the chance to discuss how my experience can benefit your team.`,
-
-      "technical-question": `This is an excellent technical question that requires a comprehensive approach. Here's how I would address it:
-
-**Technical Analysis:**
-- The core issue involves understanding the underlying architecture and data flow
-- Performance considerations are critical when scaling to production levels
-- Security implications must be evaluated throughout the implementation
-
-**Recommended Solution:**
-1. Begin with a solid foundation using established patterns
-2. Implement proper error handling and validation
-3. Add comprehensive testing coverage
-4. Consider monitoring and observability from day one
-
-**Best Practices:**
-- Follow SOLID principles and clean architecture patterns
-- Use dependency injection for better testability
-- Implement proper logging and monitoring
-- Ensure code is well-documented and maintainable
-
-The key is to balance immediate functionality with long-term maintainability and scalability.`,
-
-      "interview-response": `That's a great question. Let me tell you about a challenging project that really demonstrated my problem-solving abilities.
-
-**Situation:** In my previous role, we faced a critical system failure just before a major client presentation. The application's performance had degraded significantly due to database issues, and we had less than 24 hours to resolve it.
-
-**Task:** As the technical lead, I needed to diagnose the root cause quickly and implement a solution that wouldn't break anything else.
-
-**Action:** I immediately gathered the team and created a diagnostic plan. We discovered that database queries weren't optimized, causing slow response times. I worked with the database team to implement query optimization and added proper indexing. I also implemented caching to reduce database load.
-
-**Result:** We not only fixed the immediate issue but improved overall system performance by 40%. The presentation went perfectly, and the client was impressed with both the solution and our responsiveness.
-
-This experience taught me the importance of systematic problem-solving and the value of cross-team collaboration under pressure.`,
-
-      "general-explanation": `Let me break this down into clear, manageable components:
-
-**Key Concepts:**
-- This topic involves multiple interconnected elements that work together
-- Understanding the fundamental principles makes the details much clearer
-- Real-world examples help illustrate abstract concepts
-
-**Practical Application:**
-- Start with the basics and build complexity gradually
-- Focus on understanding *why* something works, not just *how*
-- Practice with hands-on examples to reinforce learning
-- Don't hesitate to ask questions when something isn't clear
-
-**Best Approach:**
-1. Begin with the high-level overview to see the big picture
-2. Dive into specific components one at a time
-3. Look for patterns and connections between different parts
-4. Apply what you've learned to practical scenarios
-
-The most effective way to master this topic is through consistent practice and gradual exposure to increasingly complex scenarios.`,
-    };
-
-    return (
-      answers[template as keyof typeof answers] ||
-      answers["general-explanation"]
-    );
-  }
-
   public async copyAnswer(): Promise<void> {
     const answerElement = document.getElementById(
       "generated-answer",
     ) as HTMLParagraphElement;
-    
+
     if (!answerElement) {
       console.error("Copy Answer: Answer element not found");
       return;
     }
-    
+
     const answer = answerElement.textContent || "";
-    
+
     if (!answer.trim()) {
       console.error("Copy Answer: No answer text to copy");
       return;
@@ -1019,21 +1006,20 @@ The most effective way to master this topic is through consistent practice and g
       const successMsg = document.getElementById(
         "copy-success",
       ) as HTMLDivElement;
-      
+
       if (successMsg) {
         successMsg.style.display = "block";
         setTimeout(() => {
           successMsg.style.display = "none";
         }, 2000);
       }
-
     } catch (error) {
       console.error("Failed to copy to clipboard:", error);
-      
+
       // Try fallback method on error
       try {
         this.fallbackCopyToClipboard(answer);
-        
+
         // Show success message
         const successMsg = document.getElementById(
           "copy-success",
@@ -1044,34 +1030,36 @@ The most effective way to master this topic is through consistent practice and g
             successMsg.style.display = "none";
           }, 2000);
         }
-
       } catch (fallbackError) {
         console.error("Fallback copy also failed:", fallbackError);
-        
+
         // Show answer text to user as last resort
-        const answerPreview = answer.length > 200 ? answer.substring(0, 200) + "..." : answer;
-        alert("Failed to copy to clipboard. Here's the answer:\n\n" + answerPreview);
+        const answerPreview =
+          answer.length > 200 ? answer.substring(0, 200) + "..." : answer;
+        alert(
+          "Failed to copy to clipboard. Here's the answer:\n\n" + answerPreview,
+        );
       }
     }
   }
 
   private fallbackCopyToClipboard(text: string): void {
     // Create a temporary textarea element
-    const textArea = document.createElement('textarea');
+    const textArea = document.createElement("textarea");
     textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
-    
+
     // Execute the copy command
-    const successful = document.execCommand('copy');
+    const successful = document.execCommand("copy");
     document.body.removeChild(textArea);
-    
+
     if (!successful) {
-      throw new Error('execCommand copy failed');
+      throw new Error("execCommand copy failed");
     }
   }
 
@@ -1096,19 +1084,26 @@ The most effective way to master this topic is through consistent practice and g
   generateAnswer: () => {
     try {
       const manager = (window as any).answerGenerationManager;
-      if (manager && typeof manager.generateAnswer === 'function') {
+      if (manager && typeof manager.generateAnswer === "function") {
         return manager.generateAnswer();
       } else {
         console.error("Safe wrapper: Manager not ready yet, waiting...");
         // Wait a bit and retry
         setTimeout(() => {
           const retryManager = (window as any).answerGenerationManager;
-          if (retryManager && typeof retryManager.generateAnswer === 'function') {
+          if (
+            retryManager &&
+            typeof retryManager.generateAnswer === "function"
+          ) {
             return retryManager.generateAnswer();
           } else {
-            console.error("Safe wrapper: Manager still not available after retry");
-            if (typeof alert !== 'undefined') {
-              alert("Answer Generation: Extension is loading, please try again in a moment.");
+            console.error(
+              "Safe wrapper: Manager still not available after retry",
+            );
+            if (typeof alert !== "undefined") {
+              alert(
+                "Answer Generation: Extension is loading, please try again in a moment.",
+              );
             }
           }
         }, 100);
@@ -1116,17 +1111,17 @@ The most effective way to master this topic is through consistent practice and g
       }
     } catch (error) {
       console.error("Safe wrapper: Error in generateAnswer:", error);
-      if (typeof alert !== 'undefined') {
+      if (typeof alert !== "undefined") {
         alert("Answer Generation: An error occurred. Please try again.");
       }
       return Promise.resolve();
     }
   },
-  
+
   copyAnswer: () => {
     try {
       const manager = (window as any).answerGenerationManager;
-      if (manager && typeof manager.copyAnswer === 'function') {
+      if (manager && typeof manager.copyAnswer === "function") {
         return manager.copyAnswer();
       } else {
         console.error("Safe wrapper: Manager not ready for copyAnswer");
@@ -1136,7 +1131,7 @@ The most effective way to master this topic is through consistent practice and g
       console.error("Safe wrapper: Error in copyAnswer:", error);
       return Promise.resolve();
     }
-  }
+  },
 };
 // Also provide a backup global for onclick handlers
 (window as any).AGWrapper = (window as any).safeAnswerGenerationManager;

@@ -1,6 +1,6 @@
-# Offer Hunter
+# Job Hunter
 
-Offer Hunter is a powerful Chrome extension designed to streamline and automate your job application process. It helps you manage your professional profile, tailor your resumes and cover letters using AI, and discover relevant job opportunities from platforms like Seek and LinkedIn.
+Job Hunter is a powerful Chrome extension designed to streamline and automate your job application process. It helps you manage your professional profile, tailor your resumes and cover letters using AI, and discover relevant job opportunities from platforms like Seek and LinkedIn.
 
 ## Features
 
@@ -32,7 +32,7 @@ Follow these instructions to get the extension up and running on your local mach
 1.  **Clone the repository:**
     ```bash
     git clone <repository-url>
-    cd offer_hunter
+    cd job_hunter
     ```
 
 2.  **Install dependencies:**
@@ -55,13 +55,13 @@ Follow these instructions to get the extension up and running on your local mach
 2.  Enable **"Developer mode"** using the toggle switch in the top right corner.
 3.  Click on the **"Load unpacked"** button.
 4.  Select the `extension_webpack/dist` directory from the project folder.
-5.  The Offer Hunter extension should now be loaded and visible in your browser's toolbar.
+5.  The Job Hunter extension should now be loaded and visible in your browser's toolbar.
 
 ## Configuration
 
 Before you can use the AI-powered features, you need to configure an AI provider in the extension's settings page.
 
-1.  Click on the Offer Hunter icon in the Chrome toolbar to open the extension.
+1.  Click on the Job Hunter icon in the Chrome toolbar to open the extension.
 2.  Navigate to the **Settings** page.
 
 ### OpenAI / Gemini

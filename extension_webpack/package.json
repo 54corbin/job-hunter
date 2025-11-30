@@ -13,11 +13,13 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "class-variance-authority": "^0.7.1",
     "crypto-js": "^4.2.0",
     "html-to-md": "^0.8.8",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "marked": "^12.0.2",
+    "openai": "^6.9.1",
     "pdf-lib": "^1.17.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

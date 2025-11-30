@@ -62,8 +62,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
   }, [profile?.settings.apiProviders]);
 
   const showModal = (title: string, message: string, onConfirm?: () => void) => {
-    setModalContent({ title, message, onConfirm: onConfirm || (() => setIsModalOpen(false)) });
-    setIsModalOpen(true);
+    try {
+      setModalContent({ title, message, onConfirm: onConfirm || (() => setIsModalOpen(false)) });
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error showing modal:", error);
+      // Fallback to console log if modal fails
+      console.log(`Modal: ${title} - ${message}`);
+    }
   };
 
   const refreshModels = (provider: ApiProvider) => {
@@ -76,36 +82,44 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
   };
 
   const handleSave = () => {
-    if (profile) {
-      if (!profile.settings.activeAiProviderId || profile.settings.apiProviders?.length === 0) {
-        showModal("AI Provider Required", "Please add and set an active AI provider before saving.");
-        return;
-      }
-
-      let profileToSave = { ...profile };
-      if (profile.settings.passcodeEnabled) {
-        if (passcode || confirmPasscode) {
-          if (passcode.length !== 4 || confirmPasscode.length !== 4) {
-            setPasscodeError("Passcode must be 4 digits.");
-            return;
-          }
-          if (passcode !== confirmPasscode) {
-            setPasscodeError("Passcodes do not match.");
-            return;
-          }
-          profileToSave.settings.passcode = passcode;
+    try {
+      if (profile) {
+        if (!profile.settings.activeAiProviderId || profile.settings.apiProviders?.length === 0) {
+          showModal("AI Provider Required", "Please add and set an active AI provider before saving.");
+          return;
         }
-      } else {
-        delete profileToSave.settings.passcode;
-      }
 
-      saveUserProfile(profileToSave).then(() => {
-        showModal("Success", "Settings saved!");
-        setPasscode("");
-        setConfirmPasscode("");
-        setPasscodeError("");
-        onSettingsSave();
-      });
+        let profileToSave = { ...profile };
+        if (profile.settings.passcodeEnabled) {
+          if (passcode || confirmPasscode) {
+            if (passcode.length !== 4 || confirmPasscode.length !== 4) {
+              setPasscodeError("Passcode must be 4 digits.");
+              return;
+            }
+            if (passcode !== confirmPasscode) {
+              setPasscodeError("Passcodes do not match.");
+              return;
+            }
+            profileToSave.settings.passcode = passcode;
+          }
+        } else {
+          delete profileToSave.settings.passcode;
+        }
+
+        saveUserProfile(profileToSave).then(() => {
+          showModal("Success", "Settings saved successfully!");
+          setPasscode("");
+          setConfirmPasscode("");
+          setPasscodeError("");
+          onSettingsSave();
+        }).catch((error) => {
+          console.error("Failed to save settings:", error);
+          showModal("Error", "Failed to save settings. Please try again.");
+        });
+      }
+    } catch (error) {
+      console.error("Error in handleSave:", error);
+      showModal("Error", "An unexpected error occurred. Please try again.");
     }
   };
 
@@ -188,12 +202,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
 
   const Toggle = ({ enabled, onChange, label, Icon }: { enabled: boolean, onChange: (enabled: boolean) => void, label: string, Icon: React.ElementType }) => (
     <div className="flex items-center justify-between">
-      <label className="flex items-center text-lg text-slate-700">
-        <Icon className="mr-3 text-slate-500" />
+      <label className="flex items-center text-lg text-slate-700 font-medium">
+        <Icon className="mr-3 text-slate-500 w-5 h-5" />
         {label}
       </label>
-      <button onClick={() => onChange(!enabled)} className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${enabled ? 'bg-gradient-to-r from-blue-500 to-cyan-400' : 'bg-slate-300'}`}>
-        <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+      <button onClick={() => onChange(!enabled)} className={`relative inline-flex items-center h-7 rounded-full w-12 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${enabled ? 'bg-gradient-to-r from-blue-500 to-cyan-400 shadow-lg' : 'bg-slate-300'}`}>
+        <span className={`inline-block w-5 h-5 transform bg-white rounded-full shadow-md transition-all duration-300 ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
       </button>
     </div>
   );
@@ -203,16 +217,24 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
   }
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-5xl font-bold text-slate-800">Settings</h1>
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <div className="text-center">
+        <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-2">Settings</h1>
+        <p className="text-slate-600">Configure your AI providers and security preferences</p>
+      </div>
       
-      <div className="p-8 bg-white/80 rounded-3xl shadow-xl backdrop-blur-lg space-y-6">
-        <h2 className="text-3xl font-semibold text-slate-800 flex items-center"><FiKey className="mr-3 text-slate-500" />AI Provider Settings</h2>
+      <div className="p-8 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 space-y-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <FiKey className="w-6 h-6 text-blue-600" />
+          </div>
+          <h2 className="text-3xl font-bold text-slate-800">AI Provider Settings</h2>
+        </div>
         
         {profile.settings.apiProviders?.map((provider, index) => (
-          <div key={provider.id} className="p-4 border border-slate-200 rounded-lg">
+          <div key={provider.id} className="p-6 bg-white/60 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <select value={provider.name} onChange={(e) => handleProviderChange(index, 'name', e.target.value)} className="p-3 bg-white/50 border border-slate-300 rounded-xl">
+              <select value={provider.name} onChange={(e) => handleProviderChange(index, 'name', e.target.value)} className="p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm">
                 <option value="OpenAI">OpenAI</option>
                 <option value="Gemini">Gemini</option>
                 <option value="Ollama">Ollama</option>
@@ -222,7 +244,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
                 placeholder={provider.name === 'Ollama' ? 'Ollama Host (e.g. http://localhost:11434)' : 'API Key'}
                 value={provider.apiKey}
                 onChange={(e) => handleProviderChange(index, 'apiKey', e.target.value)}
-                className="p-3 bg-white/50 border border-slate-300 rounded-xl"
+                className="p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
               />
               <div className="col-span-2 flex items-center gap-2">
                 {provider.name === 'Ollama' ? (
@@ -230,18 +252,18 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
                     <select
                       value={provider.model}
                       onChange={(e) => handleProviderChange(index, 'model', e.target.value)}
-                      className="p-3 w-full bg-white/50 border border-slate-300 rounded-xl"
+                      className="p-4 w-full bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
                     >
                       {(providerModels[provider.id] || []).map(modelName => (
                         <option key={modelName} value={modelName}>{modelName}</option>
                       ))}
                     </select>
-                    <button onClick={() => refreshModels(provider)} className="p-3 bg-white/50 border border-slate-300 rounded-xl">
-                      <FiDownloadCloud />
+                    <button onClick={() => refreshModels(provider)} className="p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl hover:bg-slate-50 transition-all duration-200 shadow-sm">
+                      <FiDownloadCloud className="text-slate-600" />
                     </button>
                   </div>
                 ) : (
-                  <select value={provider.model} onChange={(e) => handleProviderChange(index, 'model', e.target.value)} className="p-3 w-full bg-white/50 border border-slate-300 rounded-xl">
+                  <select value={provider.model} onChange={(e) => handleProviderChange(index, 'model', e.target.value)} className="p-4 w-full bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm">
                     {provider.name === 'OpenAI' ? (
                       <>
                         <option value="gpt-4-0613">gpt-4-0613</option>
@@ -341,53 +363,63 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
               </div>
             </div>
             <div className="flex items-center justify-between mt-4">
-              <button onClick={() => setActiveProvider(provider.id)} disabled={profile.settings.activeAiProviderId === provider.id} className="text-sm text-blue-500 disabled:text-gray-400">
+              <button onClick={() => setActiveProvider(provider.id)} disabled={profile.settings.activeAiProviderId === provider.id} className="px-4 py-2 text-sm font-medium text-blue-600 disabled:text-slate-400 hover:text-blue-700 transition-colors">
                 {profile.settings.activeAiProviderId === provider.id ? 'Active' : 'Set as Active'}
               </button>
-              <button onClick={() => removeProvider(index)} className="text-red-500"><FiTrash2 /></button>
+              <button onClick={() => removeProvider(index)} className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200">
+                <FiTrash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
         ))}
         
-        <button onClick={addProvider} className="flex items-center text-blue-500"><FiPlus className="mr-2" />Add Provider</button>
+        <button onClick={addProvider} className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium">
+          <FiPlus className="w-4 h-4" />
+          Add Provider
+        </button>
         
       </div>
 
-      <div className="p-8 bg-white/80 rounded-3xl shadow-xl backdrop-blur-lg space-y-6">
-        <h2 className="text-3xl font-semibold text-slate-800 flex items-center"><FiLock className="mr-3 text-slate-500" />Passcode Settings</h2>
+      <div className="p-8 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 space-y-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-purple-100 rounded-lg">
+            <FiLock className="w-6 h-6 text-purple-600" />
+          </div>
+          <h2 className="text-3xl font-bold text-slate-800">Passcode Settings</h2>
+        </div>
         <Toggle enabled={profile.settings.passcodeEnabled} onChange={(val) => handleToggleChange('passcodeEnabled', val)} label="Enable Passcode" Icon={profile.settings.passcodeEnabled ? FiToggleRight : FiToggleLeft} />
         
         {profile.settings.passcodeEnabled && (
-          <div className="space-y-4 pt-4 border-t border-slate-200">
+          <div className="space-y-6 pt-6 border-t border-slate-200">
             <div>
-              <label htmlFor="passcode" className="block text-sm font-medium text-slate-700">New Passcode (.4 digits):</label>
+              <label htmlFor="passcode" className="block text-sm font-semibold text-slate-700 mb-2">New Passcode (4 digits):</label>
               <input
                 type="password"
                 id="passcode"
                 maxLength={4}
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
-                className="mt-1 w-full p-3 bg-white/50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="w-full p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
               />
             </div>
             <div>
-              <label htmlFor="confirmPasscode" className="block text-sm font-medium text-slate-700">Confirm Passcode:</label>
+              <label htmlFor="confirmPasscode" className="block text-sm font-semibold text-slate-700 mb-2">Confirm Passcode:</label>
               <input
                 type="password"
                 id="confirmPasscode"
                 maxLength={4}
                 value={confirmPasscode}
                 onChange={(e) => setConfirmPasscode(e.target.value)}
-                className="mt-1 w-full p-3 bg-white/50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="w-full p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
               />
             </div>
             <div>
-              <label htmlFor="lockoutDelay" className="block text-sm font-medium text-slate-700">Lock after inactivity:</label>
+              <label htmlFor="lockoutDelay" className="block text-sm font-semibold text-slate-700 mb-2">Lock after inactivity:</label>
               <select
                 id="lockoutDelay"
                 value={profile.settings.lockoutDelay}
                 onChange={(e) => handleLockoutDelayChange(Number(e.target.value))}
-                className="mt-1 w-full p-3 bg-white/50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="w-full p-4 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
               >
                 <option value={0}>Immediately</option>
                 <option value={60000}>1 Minute</option>
@@ -395,7 +427,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
                 <option value={900000}>15 Minutes</option>
               </select>
             </div>
-            {passcodeError && <p className="text-sm text-red-600">{passcodeError}</p>}
+            {passcodeError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2 font-medium">{passcodeError}</p>}
           </div>
         )}
       </div>
@@ -403,12 +435,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
       <div className="flex justify-between items-center">
         <button 
           onClick={handleSave} 
-          className="flex items-center bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105"
+          className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95"
         >
-          <FiSave className="mr-2" />
+          <FiSave className="w-5 h-5" />
           Save Settings
         </button>
-        <Link to="/privacy" className="text-sm text-blue-500 hover:underline">Privacy Policy</Link>
+        <Link to="/privacy" className="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors">Privacy Policy</Link>
       </div>
       <ConfirmModal
         isOpen={isModalOpen}

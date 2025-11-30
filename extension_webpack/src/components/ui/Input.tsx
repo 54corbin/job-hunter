@@ -1,21 +1,19 @@
 import React from 'react';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  error?: boolean;
-}
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-const Input: React.FC<InputProps> = ({ className, error, ...props }) => {
-  const baseStyles =
-    'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm';
-  
-  const errorStyles = 'border-red-500 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500';
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={`flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+Input.displayName = 'Input';
 
-  return (
-    <input
-      className={`${baseStyles} ${error ? errorStyles : ''} ${className}`}
-      {...props}
-    />
-  );
-};
-
-export default Input;
+export { Input };

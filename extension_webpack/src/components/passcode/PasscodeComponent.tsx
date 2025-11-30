@@ -1,6 +1,6 @@
 import React, { useState, useRef, ChangeEvent, KeyboardEvent } from 'react';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import { Button } from '../ui/Button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
 import { FiLock, FiUnlock } from 'react-icons/fi';
 
 interface PasscodeComponentProps {
@@ -45,17 +45,17 @@ const PasscodeComponent: React.FC<PasscodeComponentProps> = ({ onUnlock, isError
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 bg-opacity-50 backdrop-blur-lg">
-      <Card className={`w-full max-w-sm p-8 bg-white/90 dark:bg-slate-800/90 border border-slate-200/10 shadow-2xl rounded-2xl ${getShakeClass()}`}>
-        <div className="text-center">
+      <Card className={`w-full max-w-sm bg-white/90 dark:bg-slate-800/90 border border-slate-200/10 shadow-2xl rounded-2xl ${getShakeClass()}`}>
+        <CardHeader className="text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-lg">
             <FiLock className="h-8 w-8" />
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">Enter Passcode</h2>
-          <p className="mt-2 text-gray-600 dark:text-slate-400">
+          <CardTitle className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">Enter Passcode</CardTitle>
+          <CardDescription className="mt-2 text-gray-600 dark:text-slate-400">
             This extension is locked for your security.
-          </p>
-        </div>
-        <div className="mt-8">
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="flex justify-center gap-4">
             {passcode.map((digit, index) => (
               <input
@@ -71,21 +71,21 @@ const PasscodeComponent: React.FC<PasscodeComponentProps> = ({ onUnlock, isError
               />
             ))}
           </div>
-        </div>
-        {isError && (
-            <p className="mt-4 text-center text-sm font-medium text-red-500">
-                Incorrect passcode. Please try again.
-            </p>
-        )}
-        <div className="mt-8">
-          <Button 
-            onClick={() => onUnlock(passcode.join(''))} 
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-          >
-            <FiUnlock />
-            Unlock
-          </Button>
-        </div>
+          {isError && (
+              <p className="mt-4 text-center text-sm font-medium text-red-500">
+                  Incorrect passcode. Please try again.
+              </p>
+          )}
+          <div className="mt-8">
+            <Button 
+              onClick={() => onUnlock(passcode.join(''))} 
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            >
+              <FiUnlock />
+              Unlock
+            </Button>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );

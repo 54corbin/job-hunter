@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ title, navigation, onRedirectToSettings
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <h1 className="text-xl font-bold">Offer Hunter</h1>
+            <h1 className="text-xl font-bold">Job Hunter</h1>
             <span className="ml-4 pl-4 border-l border-gray-600 text-lg font-semibold">{title}</span>
           </div>
           <nav className="flex space-x-4">

@@ -11,6 +11,7 @@ import {
   generateResumeForJob,
   generateCoverLetterForJob,
 } from "../services/llmService";
+import { generateAnswerForSelection } from "../services/answerGenerationService";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 let isCancelled = false;
@@ -48,9 +49,9 @@ async function createPdf(text: string): Promise<Uint8Array> {
 }
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("Offer Hunter extension installed.");
+  console.log("Job Hunter extension installed.");
   chrome.contextMenus.create({
-    id: "offer-hunter-autofill",
+    id: "job-hunter-autofill",
     title: "Autofill Form",
     contexts: ["page"],
   });
@@ -113,6 +114,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("Background: OPEN_ANSWER_GENERATION_MENU message received");
     handleOpenAnswerGenerationMenu(message.data, sender.tab?.id);
     sendResponse({ status: "ok" });
+  } else if (message.type === "GENERATE_AI_ANSWER") {
+    console.log("Background: GENERATE_AI_ANSWER message received");
+    handleGenerateAiAnswer(message.data)
+      .then((result) => sendResponse(result))
+      .catch((error) => sendResponse({ error: error.message }));
+    return true;
   }
   return true;
 });
@@ -155,7 +162,7 @@ async function handleGenerateAnswer(
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   console.log("chrome.contextMenus.onClicked triggered", info);
-  if (info.menuItemId === "offer-hunter-autofill" && tab?.id) {
+  if (info.menuItemId === "job-hunter-autofill" && tab?.id) {
     await triggerAutofill(tab.id);
   }
 });
@@ -321,7 +328,10 @@ async function handleScrapedJobs(jobs: any[], resumeId: string) {
     const job = jobs[i];
     const result = await getMatchScore(job, resumeSummaryText);
     if (result) {
-      const scoredJob = { ...job, score: result.score, summary: result.summary };
+      // Generate a unique ID from the job URL (fallback to title+company)
+      const jobId = job.url || `${job.title}-${job.company}`;
+      
+      const scoredJob = { ...job, id: jobId, score: result.score, summary: result.summary };
       scoredJobs.push(scoredJob);
       chrome.runtime.sendMessage({ type: "NEW_JOB_SCORED", job: scoredJob });
     }
@@ -346,7 +356,7 @@ async function handleGenerateResumeForJob(job: any, resumeId: string) {
   const profile = await getUserProfile();
   if (!profile) {
     console.error("Could not find user profile.");
-    chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE" });
+    chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE", job: job });
     return;
   }
 
@@ -354,7 +364,7 @@ async function handleGenerateResumeForJob(job: any, resumeId: string) {
 
   if (!resume) {
     console.error("Could not find the specified resume to generate a new one.");
-    chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE" });
+    chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE", job: job });
     return;
   }
 
@@ -380,7 +390,7 @@ async function handleGenerateResumeForJob(job: any, resumeId: string) {
       job: job,
     });
   } else {
-    chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE" });
+    chrome.runtime.sendMessage({ type: "RESUME_GENERATION_COMPLETE", job: job });
   }
 }
 
@@ -415,7 +425,7 @@ async function handleGenerateCoverLetterForJob(job: any, resumeId: string) {
   const profile = await getUserProfile();
   if (!profile) {
     console.error("Could not find user profile.");
-    chrome.runtime.sendMessage({ type: "COVER_LETTER_GENERATION_FAILURE" });
+    chrome.runtime.sendMessage({ type: "COVER_LETTER_GENERATION_FAILURE", job: job });
     return;
   }
 
@@ -425,7 +435,7 @@ async function handleGenerateCoverLetterForJob(job: any, resumeId: string) {
     console.error(
       "Could not find the specified resume to generate a cover letter.",
     );
-    chrome.runtime.sendMessage({ type: "COVER_LETTER_GENERATION_FAILURE" });
+    chrome.runtime.sendMessage({ type: "COVER_LETTER_GENERATION_FAILURE", job: job });
     return;
   }
 
@@ -438,7 +448,7 @@ async function handleGenerateCoverLetterForJob(job: any, resumeId: string) {
       job: job,
     });
   } else {
-    chrome.runtime.sendMessage({ type: "COVER_LETTER_GENERATION_FAILURE" });
+    chrome.runtime.sendMessage({ type: "COVER_LETTER_GENERATION_FAILURE", job: job });
   }
 }
 
@@ -478,5 +488,31 @@ async function handleOpenAnswerGenerationMenu(data: {
     console.log("Background: Message sent to content script to show popup");
   } catch (error) {
     console.error('Background: Error sending message to content script:', error);
+  }
+}
+
+async function handleGenerateAiAnswer(data: {
+  selectedText: string;
+  questionType: "general" | "interview" | "application" | "technical";
+  context?: string;
+}) {
+  console.log("Background: handleGenerateAiAnswer called");
+  console.log("Background: Data received:", data);
+
+  try {
+    const result = await generateAnswerForSelection({
+      selectedText: data.selectedText,
+      questionType: data.questionType,
+      context: data.context
+    });
+
+    if (result.error) {
+      return { error: result.error };
+    }
+
+    return { answer: result.answer };
+  } catch (error) {
+    console.error("Background: Error generating AI answer:", error);
+    return { error: error instanceof Error ? error.message : "Unknown error occurred" };
   }
 }

@@ -1,4 +1,4 @@
-# Offer Hunter Brownfield Enhancement PRD
+# Job Hunter Brownfield Enhancement PRD
 
 ## Intro Project Analysis and Context
 

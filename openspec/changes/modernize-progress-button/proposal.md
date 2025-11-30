@@ -1,5 +1,5 @@
 ## Why
-The current ProgressButton.tsx component has basic styling and simple gradient animations that feel outdated. Users expect modern, smooth, and engaging UI interactions, especially in productivity tools like Offer Hunter where the button represents important stop/cancel functionality during job application automation.
+The current ProgressButton.tsx component has basic styling and simple gradient animations that feel outdated. Users expect modern, smooth, and engaging UI interactions, especially in productivity tools like Job Hunter where the button represents important stop/cancel functionality during job application automation.
 
 The existing component lacks visual hierarchy, modern design patterns, and doesn't provide clear visual feedback about the action being performed. A modern, animated ProgressButton will improve user experience and make the extension feel more polished and professional.
 

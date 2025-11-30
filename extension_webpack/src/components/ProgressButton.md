@@ -266,7 +266,7 @@ None - fully backward compatible
 
 ## Design System Integration
 
-This component follows the Offer Hunter design system:
+This component follows the Job Hunter design system:
 
 - Consistent with existing Button component patterns
 - Uses Tailwind CSS utilities

@@ -129,11 +129,25 @@ export const saveUserProfile = (data: UserProfile): Promise<void> => {
 
 // ... (updateProfileField and trackApplication remain the same) ...
 
+// Helper function to ensure jobs have unique IDs
+const ensureJobIds = (jobs: any[]): any[] => {
+  return jobs.map(job => {
+    if (!job.id) {
+      const jobId = job.url ? 
+        btoa(job.url).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16) :
+        btoa(`${job.title}-${job.company}-${job.url || ''}`).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
+      return { ...job, id: jobId };
+    }
+    return job;
+  });
+};
+
 export const getJobsForResume = (resumeId: string): Promise<any[]> => {
   return new Promise((resolve) => {
     if (chrome && chrome.storage && chrome.storage.local) {
       chrome.storage.local.get({ jobLists: {} }, (result) => {
-        resolve(result.jobLists[resumeId] || []);
+        const jobs = result.jobLists[resumeId] || [];
+        resolve(ensureJobIds(jobs));
       });
     } else {
       console.warn("chrome.storage.local is not available. Mocking get jobs.");
@@ -146,7 +160,8 @@ export const saveJobsForResume = (resumeId: string, jobs: any[]): Promise<void> 
   return new Promise((resolve) => {
     if (chrome && chrome.storage && chrome.storage.local) {
       chrome.storage.local.get({ jobLists: {} }, (result) => {
-        const newJobLists = { ...result.jobLists, [resumeId]: jobs };
+        const jobsWithIds = ensureJobIds(jobs);
+        const newJobLists = { ...result.jobLists, [resumeId]: jobsWithIds };
         chrome.storage.local.set({ jobLists: newJobLists }, () => {
           resolve();
         });

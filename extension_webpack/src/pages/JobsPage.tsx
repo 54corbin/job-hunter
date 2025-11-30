@@ -7,14 +7,21 @@ import ResumeReviewModal from '../components/ResumeReviewModal';
 import CoverLetterReviewModal from '../components/CoverLetterReviewModal';
 import ProgressButton from '../components/ProgressButton';
 
+const ensureJobId = (job: any): any => {
+  if (!job.id) {
+    const jobId = job.url || `${job.title}-${job.company}`;
+    return { ...job, id: jobId };
+  }
+  return job;
+};
+
 const JobsPage: React.FC = () => {
   const [jobs, setJobs] = useState<any[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
   const [isMatching, setIsMatching] = useState(false);
   const [matchingProgress, setMatchingProgress] = useState(0);
-  const [generatingResumeId, setGeneratingResumeId] = useState<string | null>(null);
-  const [generatingCoverLetterId, setGeneratingCoverLetterId] = useState<string | null>(null);
+  const [generatingAction, setGeneratingAction] = useState<{ jobId: string; type: 'resume' | 'coverLetter' } | null>(null);
   const [isReviewModalOpen, setReviewModalOpen] = useState(false);
   const [isCoverLetterReviewModalOpen, setCoverLetterReviewModalOpen] = useState(false);
   const [generatedResumeText, setGeneratedResumeText] = useState('');
@@ -124,14 +131,14 @@ const JobsPage: React.FC = () => {
         setIsMatching(true);
         setMatchingProgress(message.progress);
       } else if (message.type === "NEW_JOB_SCORED") {
-        setJobs(prevJobs => [...prevJobs, message.job].sort((a, b) => b.score - a.score));
+        setJobs(prevJobs => [...prevJobs, ensureJobId(message.job)].sort((a, b) => b.score - a.score));
       } else if (message.type === "JOB_MATCHING_COMPLETE") {
         setIsMatching(false);
         setMatchingProgress(0);
       } else if (message.type === "RESUME_GENERATION_COMPLETE") {
-        setGeneratingResumeId(null);
+        setGeneratingAction(prev => (message.job && prev?.jobId === message.job.id ? null : prev));
       } else if (message.type === "RESUME_GENERATION_SUCCESS") {
-        setGeneratingResumeId(null);
+        setGeneratingAction(prev => (message.job && prev?.jobId === message.job.id ? null : prev));
         setGeneratedResumeText(message.resumeText);
         setReviewModalOpen(true);
 
@@ -140,11 +147,11 @@ const JobsPage: React.FC = () => {
           chrome.storage.local.set({ [cacheKey]: message.resumeText });
         }
       } else if (message.type === "COVER_LETTER_GENERATION_SUCCESS") {
-        setGeneratingCoverLetterId(null);
+        setGeneratingAction(prev => (message.job && prev?.jobId === message.job.id ? null : prev));
         setGeneratedCoverLetterText(message.coverLetter);
         setCoverLetterReviewModalOpen(true);
       } else if (message.type === "COVER_LETTER_GENERATION_FAILURE") {
-        setGeneratingCoverLetterId(null);
+        setGeneratingAction(prev => (message.job && prev?.jobId === message.job.id ? null : prev));
       }
     };
     chrome.runtime.onMessage.addListener(messageListener);
@@ -215,7 +222,7 @@ const JobsPage: React.FC = () => {
 
   const handleGenerateCoverLetter = (job: any) => {
     if (selectedResumeId) {
-      setGeneratingCoverLetterId(job.id);
+      setGeneratingAction({ jobId: job.id, type: 'coverLetter' });
       chrome.runtime.sendMessage({
         type: "GENERATE_COVER_LETTER_FOR_JOB",
         job,
@@ -234,7 +241,7 @@ const JobsPage: React.FC = () => {
         setGeneratedResumeText(cachedResume[cacheKey]);
         setReviewModalOpen(true);
       } else {
-        setGeneratingResumeId(job.id);
+        setGeneratingAction({ jobId: job.id, type: 'resume' });
         chrome.runtime.sendMessage({
           type: "GENERATE_RESUME_FOR_JOB",
           job,
@@ -485,8 +492,8 @@ const JobsPage: React.FC = () => {
 
           {jobs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {jobs.map((job, index) => (
-                <div key={index} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col overflow-hidden border-b-4 border-blue-500">
+              {jobs.map((job) => (
+                <div key={job.id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col overflow-hidden border-b-4 border-blue-500">
                   <div className="p-6 flex-grow">
                     <p className="text-xl font-bold text-gray-800 truncate">{job.title}</p>
                     <p className="text-gray-600 mt-1">{job.company}</p>
@@ -508,9 +515,9 @@ const JobsPage: React.FC = () => {
                         onClick={() => handleGenerateResume(job)} 
                         className="flex items-center text-sm text-blue-600 hover:text-blue-800 font-semibold p-2 rounded-md hover:bg-blue-100 transition-colors" 
                         title="Generate tailored resume"
-                        disabled={generatingResumeId === job.id}
+                        disabled={generatingAction?.jobId === job.id}
                       >
-                        {generatingResumeId === job.id ? (
+                        {generatingAction?.jobId === job.id && generatingAction?.type === 'resume' ? (
                           <FiLoader className="animate-spin" size={20} />
                         ) : (
                           <FiFileText size={20} />
@@ -520,9 +527,9 @@ const JobsPage: React.FC = () => {
                         onClick={() => handleGenerateCoverLetter(job)} 
                         className="flex items-center text-sm text-blue-600 hover:text-blue-800 font-semibold p-2 rounded-md hover:bg-blue-100 transition-colors" 
                         title="Generate and copy cover letter"
-                        disabled={generatingCoverLetterId === job.id}
+                        disabled={generatingAction?.jobId === job.id}
                       >
-                        {generatingCoverLetterId === job.id ? (
+                        {generatingAction?.jobId === job.id && generatingAction?.type === 'coverLetter' ? (
                           <FiLoader className="animate-spin" size={20} />
                         ) : (
                           <FiMail size={20} />

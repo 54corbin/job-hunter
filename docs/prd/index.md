@@ -1,4 +1,4 @@
-# Offer Hunter Brownfield Enhancement PRD
+# Job Hunter Brownfield Enhancement PRD
 
 This document has been sharded into multiple files. Please see the sections below for details.
 

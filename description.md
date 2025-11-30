@@ -1,6 +1,6 @@
-# Offer Hunter: Your AI-Powered Job Application Assistant
+# Job Hunter: Your AI-Powered Job Application Assistant
 
-Tired of manually filling out job applications? Offer Hunter is a Chrome extension that automates the tedious parts of the job search, so you can focus on what matters most: landing your dream job.
+Tired of manually filling out job applications? Job Hunter is a Chrome extension that automates the tedious parts of the job search, so you can focus on what matters most: landing your dream job.
 
 ## Features
 

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Offer Hunter",
+  "name": "Job Hunter",
   "version": "1.0",
-  "description": "A Chrome extension to help you hunt for offers.",
+  "description": "A Chrome extension to help you hunt for jobs.",
   "permissions": [
     "storage",
     "activeTab",

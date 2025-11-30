@@ -2,7 +2,7 @@
 
 ## Epic Goal
 
-To completely redesign and modernize the user interface of the Offer Hunter Chrome Extension, making it more visually appealing, intuitive, and user-friendly. This will improve the overall user experience and bring the application up to modern design standards.
+To completely redesign and modernize the user interface of the Job Hunter Chrome Extension, making it more visually appealing, intuitive, and user-friendly. This will improve the overall user experience and bring the application up to modern design standards.
 
 ## Epic Description
 

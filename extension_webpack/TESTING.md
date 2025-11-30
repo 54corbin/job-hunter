@@ -5,8 +5,8 @@
 ### 1. Load the Extension
 1. Open Chrome and go to `chrome://extensions/`
 2. Enable "Developer mode"
-3. Click "Load unpacked" and select the `/home/corbin/Development/offer_hunter/extension_webpack/dist` folder
-4. Verify the "Offer Hunter" extension appears in your extensions list
+3. Click "Load unpacked" and select the `/home/corbin/Development/job_hunter/extension_webpack/dist` folder
+4. Verify the "Job Hunter" extension appears in your extensions list
 
 ### 2. Test the Content Script
 1. Open any webpage (or use the test page at `/home/corbin/Development/offer_hunter/extension_webpack/test-page.html`)
@@ -62,7 +62,7 @@
 
 #### Check Extension Permissions:
 - Go to `chrome://extensions/`
-- Click "Details" on Offer Hunter extension
+- Click "Details" on Job Hunter extension
 - Verify it has access to the current site
 
 #### Manual Testing:

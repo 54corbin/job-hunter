@@ -9,6 +9,7 @@ import SettingsPage from './pages/SettingsPage';
 import DesignSystemPage from './pages/DesignSystemPage';
 import AnswerGenerationPage from './pages/AnswerGenerationPage';
 import PasscodeComponent from './components/passcode/PasscodeComponent';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { getUserProfile, saveUserProfile } from './services/storageService';
 import CryptoJS from 'crypto-js';
 
@@ -72,36 +73,38 @@ const App: React.FC = () => {
   }
 
   return (
-    <>
-      {isLocked && <PasscodeComponent onUnlock={handleUnlock} isError={passcodeError} />}
-      <div className={isLocked ? 'blur-sm' : '' }>
-        <Routes>
-          {!isConfigured ? (
-            <Route path="/*" element={<Navigate to="/settings" replace />} />
-          ) : (
+    <ErrorBoundary>
+      <>
+        {isLocked && <PasscodeComponent onUnlock={handleUnlock} isError={passcodeError} />}
+        <div className={isLocked ? 'blur-sm' : '' }>
+          <Routes>
             <Route path="/*" element={
               <Layout onRedirectToSettings={() => {}} isConfigured={isConfigured}>
                 <Routes>
-                  <Route path="/" element={<Navigate to="/profile" replace />} />
-                  <Route path="/history" element={<HistoryPage />} />
-                  <Route path="/jobs" element={<JobsPage />} />
+                  <Route path="/" element={
+                    !isConfigured ? <Navigate to="/settings" replace /> : <Navigate to="/profile" replace />
+                  } />
+                  <Route path="/history" element={
+                    !isConfigured ? <Navigate to="/settings" replace /> : <HistoryPage />
+                  } />
+                  <Route path="/jobs" element={
+                    !isConfigured ? <Navigate to="/settings" replace /> : <JobsPage />
+                  } />
                   <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/profile" element={
+                    !isConfigured ? <Navigate to="/settings" replace /> : <ProfilePage />
+                  } />
                   <Route path="/settings" element={<SettingsPage onSettingsSave={updateConfigStatus} />} />
                 </Routes>
               </Layout>
             } />
-          )}
-          <Route path="/settings" element={
-            <Layout onRedirectToSettings={() => {}} isConfigured={isConfigured}>
-              <SettingsPage onSettingsSave={updateConfigStatus} />
-            </Layout>
-          } />
-          {/* Answer Generation Popup - works independently */}
-          <Route path="/answer-generation" element={<AnswerGenerationPage />} />
-        </Routes>
-      </div>
-    </>
+            {/* Answer Generation Popup - works independently */}
+            <Route path="/answer-generation" element={<AnswerGenerationPage />} />
+            <Route path="/design-system" element={<DesignSystemPage />} />
+          </Routes>
+        </div>
+      </>
+    </ErrorBoundary>
   );
 };
 

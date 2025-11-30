@@ -207,7 +207,7 @@ export const listModels = async (
       const data = await response.json();
       return data.models
         .map((m: any) => m.name.replace("models/", ""))
-        .filter((m: string) => m.includes("gemini"));
+        .filter((m: any) => m.includes("gemini"));
     } catch (error) {
       console.error("Error fetching Gemini models:", error);
       return null;
@@ -230,7 +230,7 @@ export const listModels = async (
         dangerouslyAllowBrowser: true,
       });
       const models = await openai.models.list();
-      return models.data.map((m) => m.id).filter((id) => id.includes("gpt"));
+      return models.data.map((m: any) => m.id).filter((id: any) => id.includes("gpt"));
     } catch (error) {
       console.error("Error fetching OpenAI models:", error);
       return null;

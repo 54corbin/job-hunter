@@ -18,7 +18,7 @@ const navigation = [
 const Layout: React.FC<LayoutProps> = ({ children, onRedirectToSettings, isConfigured }) => {
   const location = useLocation();
   const currentNavItem = navigation.find(item => item.href === location.pathname);
-  const pageTitle = currentNavItem ? currentNavItem.name : 'Offer Hunter';
+  const pageTitle = currentNavItem ? currentNavItem.name : 'Job Hunter';
 
   return (
     <div className="h-screen bg-gray-100">
