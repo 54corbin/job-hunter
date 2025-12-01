@@ -23,6 +23,7 @@ const JobsPage: React.FC = () => {
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
   const [isMatching, setIsMatching] = useState(false);
   const [matchingProgress, setMatchingProgress] = useState(0);
+  const [jobsSavedCount, setJobsSavedCount] = useState(0);
   const [generatingAction, setGeneratingAction] = useState<{ jobId: string; type: 'resume' | 'coverLetter' } | null>(null);
   const [isReviewModalOpen, setReviewModalOpen] = useState(false);
   const [isCoverLetterReviewModalOpen, setCoverLetterReviewModalOpen] = useState(false);
@@ -136,6 +137,8 @@ const JobsPage: React.FC = () => {
         setIsMatching(true);
         setMatchingProgress(message.progress);
       } else if (message.type === "NEW_JOB_SCORED") {
+        // Increment the count when a new job is saved
+        setJobsSavedCount(prev => prev + 1);
         setJobs(prevJobs => [...prevJobs, ensureJobId(message.job)].sort((a, b) => b.score - a.score));
       } else if (message.type === "JOB_MATCHING_COMPLETE") {
         setIsMatching(false);
@@ -143,6 +146,7 @@ const JobsPage: React.FC = () => {
       } else if (message.type === "JOB_MATCHING_FAILURE") {
         setIsMatching(false);
         setMatchingProgress(0);
+        setJobsSavedCount(0); // Reset count on failure
         showError(
           'Job Search Failed',
           message.error || 'An error occurred while searching for jobs. Please try again.',
@@ -161,6 +165,14 @@ const JobsPage: React.FC = () => {
           'Partial Results',
           message.message || 'Some jobs failed to score, but found valid matches.',
           { duration: 6000 }
+        );
+      } else if (message.type === "JOB_MATCHING_SUCCESS") {
+        setIsMatching(false);
+        setMatchingProgress(0);
+        showSuccess(
+          'Jobs Saved Successfully',
+          message.message || 'Job search completed successfully!',
+          { duration: 4000 }
         );
       } else if (message.type === "RESUME_GENERATION_COMPLETE") {
         setGeneratingAction(prev => (message.job && prev?.jobId === message.job.id ? null : prev));
@@ -238,6 +250,7 @@ const JobsPage: React.FC = () => {
       setJobs([]); // Clear existing jobs
       setIsMatching(true);
       setMatchingProgress(0);
+      setJobsSavedCount(0); // Reset jobs saved count
 
       const updatedResumes = profile.resumes?.map(r => {
         if (r.id === selectedResumeId) {
@@ -520,7 +533,11 @@ const JobsPage: React.FC = () => {
                   </nav>
 
                   {isMatching ? (
-                    <ProgressButton progress={matchingProgress} onClick={handleCancel} />
+                    <ProgressButton 
+                      progress={matchingProgress} 
+                      onClick={handleCancel}
+                      jobsSavedCount={jobsSavedCount}
+                    />
                   ) : (
                     <button
                       onClick={handleDiscoverJobs}
@@ -595,9 +612,21 @@ const JobsPage: React.FC = () => {
             !isProfileLoading && !isMatching && (
               <div className="text-center p-12 bg-white/80 rounded-3xl shadow-xl backdrop-blur-lg">
                 <h3 className="text-3xl font-semibold text-slate-700">No recommended jobs for this resume.</h3>
-                <p className="mt-2 text-slate-500">Click "Refresh Jobs" to start a search.</p>
+                <p className="mt-2 text-slate-500">Click "Find Jobs" to start a search.</p>
               </div>
             )
+          )}
+
+          {/* Real-time job saving indicator */}
+          {isMatching && (
+            <div className="fixed top-4 right-4 z-50 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium">
+                  Saving jobs in real-time... {jobsSavedCount} saved
+                </span>
+              </div>
+            </div>
           )}
         </>
       )}

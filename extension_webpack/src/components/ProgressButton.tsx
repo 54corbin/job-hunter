@@ -16,6 +16,7 @@ interface ProgressButtonProps {
   className?: string;
   ariaLabel?: string;
   reducedMotion?: boolean;
+  jobsSavedCount?: number;
 }
 
 const ProgressButton: React.FC<ProgressButtonProps> = ({
@@ -29,6 +30,7 @@ const ProgressButton: React.FC<ProgressButtonProps> = ({
   className = '',
   ariaLabel,
   reducedMotion = false,
+  jobsSavedCount = 0,
 }) => {
   const [isPressed, setIsPressed] = useState(false);
 
@@ -95,7 +97,7 @@ const ProgressButton: React.FC<ProgressButtonProps> = ({
       case 'completed':
         return 'Completed';
       case 'loading':
-        return `Processing (${Math.round(progress)}%)`;
+        return `Finding Jobs (${Math.round(progress)}%) • ${jobsSavedCount} saved`;
       default:
         return `Stop (${Math.round(progress)}%)`;
     }

@@ -15,6 +15,7 @@ class AnswerGenerationManager {
 
   private popupElement: HTMLElement | null = null;
   private hideTimeout: NodeJS.Timeout | null = null;
+  private clickOutsideHandler: ((event: MouseEvent) => void) | null = null;
 
   constructor() {
     this.init();
@@ -36,7 +37,11 @@ class AnswerGenerationManager {
 
     document.addEventListener("keyup", (e) => {
       if (e.key === "Escape") {
-        this.hidePopup();
+        if (this.popupState.isVisible) {
+          this.hidePopup();
+        } else {
+          this.hidePopup();
+        }
       }
     });
 
@@ -58,14 +63,20 @@ class AnswerGenerationManager {
   private handleTextSelection(): void {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) {
-      this.hidePopup();
+      // Only hide if popup is not visible (i.e., only hide the icon, not the full popup)
+      if (!this.popupState.isVisible) {
+        this.hidePopup();
+      }
       return;
     }
 
     const selectedText = selection.toString().trim();
 
     if (selectedText.length < 10) {
-      this.hidePopup();
+      // Only hide if popup is not visible 
+      if (!this.popupState.isVisible) {
+        this.hidePopup();
+      }
       return;
     }
 
@@ -145,7 +156,9 @@ class AnswerGenerationManager {
     icon.style.top = `${adjustedY}px`;
 
     // Add click event listener
-    icon.addEventListener("click", () => {
+    icon.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       this.showInjectedPopup(this.popupState.selectedText, position);
       this.removeIcon();
     });
@@ -163,13 +176,6 @@ class AnswerGenerationManager {
         this.popupElement.style.visibility = "visible";
       }
     }, 50);
-
-    // Schedule hide AFTER a minimum display time
-    setTimeout(() => {
-      if (this.popupState.isVisible) {
-        this.scheduleHide();
-      }
-    }, 1500);
   }
 
   private removeIcon(): void {
@@ -180,21 +186,17 @@ class AnswerGenerationManager {
     this.popupElement = null;
   }
 
-  private scheduleHide(): void {
-    if (this.hideTimeout) {
-      clearTimeout(this.hideTimeout);
-    }
-
-    this.hideTimeout = setTimeout(() => {
-      this.removeIcon();
-    }, 8000);
-  }
-
   public hidePopup(): void {
     // Remove injected popup
     const injectedPopup = document.getElementById("injected-answer-popup");
     if (injectedPopup) {
       injectedPopup.remove();
+    }
+
+    // Remove click outside handler
+    if (this.clickOutsideHandler) {
+      document.removeEventListener('click', this.clickOutsideHandler);
+      this.clickOutsideHandler = null;
     }
 
     // Remove icon
@@ -286,10 +288,10 @@ class AnswerGenerationManager {
                 Answer Generation 📌
               </h3>
               <p style="margin: 0 !important; font-size: 12px !important; color: #6b7280 !important;">
-                AI-powered responses • Pinned at top for visibility • Scroll to see more</p>
+                AI-powered responses • Stays open until closed • Scroll to see more</p>
             </div>
           </div>
-          <button onclick="this.closest('#injected-answer-popup').remove()" style="
+          <button onclick="(window.answerGenerationManager||window.safeAnswerGenerationManager)?.hidePopup?.()" style="
             background: none !important;
             border: none !important;
             cursor: pointer !important;
@@ -298,6 +300,8 @@ class AnswerGenerationManager {
             color: #6b7280 !important;
             font-size: 18px !important;
           ">
+            ×
+          </button>
             ×
           </button>
         </div>
@@ -602,12 +606,35 @@ class AnswerGenerationManager {
     popup.appendChild(popupContent);
     document.body.appendChild(popup);
 
+    // Set up click outside detection
+    this.setupClickOutsideDetection(popup);
+
     // Store popup state
     this.popupState.isVisible = true;
     this.popupState.selectedText = selectedText;
 
     // Initialize popup functionality
     this.initializePopupFunctionality();
+  }
+
+  private setupClickOutsideDetection(popup: HTMLElement): void {
+    // Create click outside handler
+    this.clickOutsideHandler = (event: MouseEvent) => {
+      // Check if click is outside the popup
+      if (!popup.contains(event.target as Node)) {
+        this.hidePopup();
+      }
+    };
+
+    // Add click inside popup to prevent propagation
+    popup.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+
+    // Add click outside handler with a small delay to prevent immediate closure
+    setTimeout(() => {
+      document.addEventListener('click', this.clickOutsideHandler!);
+    }, 100);
   }
 
   private initializePopupFunctionality(): void {

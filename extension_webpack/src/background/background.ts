@@ -339,6 +339,10 @@ async function handleScrapedJobs(jobs: any[], resumeId: string) {
   const resumeSummaryText = resume.text;
   const scoredJobs = [];
   let hasErrors = false;
+  let jobsSavedCount = 0;
+
+  // Get existing jobs to check for duplicates
+  let existingJobs = await getJobsForResume(resumeId);
 
   for (let i = 0; i < jobs.length; i++) {
     if (isCancelled) {
@@ -361,7 +365,31 @@ async function handleScrapedJobs(jobs: any[], resumeId: string) {
         const jobId = job.url || `${job.title}-${job.company}`;
         
         const scoredJob = { ...job, id: jobId, score: result.score, summary: result.summary };
-        scoredJobs.push(scoredJob);
+        
+        // Check if job already exists to avoid duplicates
+        const existingJobIndex = existingJobs.findIndex(existing => existing.url === job.url);
+        
+        if (existingJobIndex >= 0) {
+          // Update existing job
+          existingJobs[existingJobIndex] = scoredJob;
+          console.log(`Updated existing job: ${job.title}`);
+        } else {
+          // Add new job
+          existingJobs.push(scoredJob);
+          console.log(`Added new job: ${job.title}`);
+        }
+        
+        // Save immediately to prevent data loss
+        try {
+          await saveJobsForResume(resumeId, existingJobs);
+          jobsSavedCount++;
+          console.log(`Saved job ${i + 1}/${jobs.length} - Total saved: ${jobsSavedCount}`);
+        } catch (saveError) {
+          console.error(`Failed to save job ${job.title}:`, saveError);
+          hasErrors = true;
+        }
+        
+        // Send to UI immediately
         chrome.runtime.sendMessage({ type: "NEW_JOB_SCORED", job: scoredJob });
       }
     } catch (error) {
@@ -375,14 +403,7 @@ async function handleScrapedJobs(jobs: any[], resumeId: string) {
 
   if (!isCancelled) {
     try {
-      const existingJobs = await getJobsForResume(resumeId);
-      const newJobs = [...existingJobs, ...scoredJobs];
-      const uniqueJobs = Array.from(
-        new Map(newJobs.map((job) => [job.url, job])).values(),
-      );
-      await saveJobsForResume(resumeId, uniqueJobs);
-      
-      if (hasErrors && scoredJobs.length === 0) {
+      if (hasErrors && jobsSavedCount === 0) {
         chrome.runtime.sendMessage({ 
           type: "JOB_MATCHING_FAILURE", 
           error: "Failed to score any jobs. Please check your AI provider configuration." 
@@ -390,15 +411,16 @@ async function handleScrapedJobs(jobs: any[], resumeId: string) {
       } else if (hasErrors) {
         chrome.runtime.sendMessage({ 
           type: "JOB_MATCHING_PARTIAL", 
-          message: "Some jobs failed to score, but found valid matches." 
+          message: `Some jobs failed to score, but saved ${jobsSavedCount} valid matches.` 
+        });
+      } else {
+        chrome.runtime.sendMessage({ 
+          type: "JOB_MATCHING_SUCCESS", 
+          message: `Successfully saved ${jobsSavedCount} job matches.` 
         });
       }
     } catch (error) {
-      console.error("Failed to save jobs:", error);
-      chrome.runtime.sendMessage({ 
-        type: "JOB_MATCHING_FAILURE", 
-        error: "Failed to save job results" 
-      });
+      console.error("Failed to send completion message:", error);
     }
   }
 
