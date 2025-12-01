@@ -24,8 +24,26 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [extractingProfiles, setExtractingProfiles] = useState<Set<string>>(new Set());
 
   const { showError, showSuccess, showInfo, showWarning } = useNotifications();
+
+  // Helper function to check if a resume has valid parsed info
+  const hasValidParsedInfo = (resume: Resume): boolean => {
+    if (!resume.parsedInfo) return false;
+    const info = resume.parsedInfo;
+    return Boolean(
+      (info.personalInfo && (info.personalInfo.name || info.personalInfo.email || info.personalInfo.phone)) ||
+      (info.experience && info.experience.length > 0) ||
+      (info.education && info.education.length > 0) ||
+      (info.skills && info.skills.length > 0)
+    );
+  };
+
+  // Helper function to check if a resume is currently being processed
+  const isBeingProcessed = (resumeId: string): boolean => {
+    return extractingProfiles.has(resumeId);
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,24 +97,32 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
     let extractedProfile: any;
     let keywords: string[] = [];
 
-    // Extract profile information
-    const profileResult = await extractProfileFromResume(text);
-    if ('error' in profileResult) {
-      console.error('Failed to extract profile from resume:', profileResult.error);
-      showWarning('Profile Extraction Failed', 'Could not extract profile information, but resume was saved.');
-      extractedProfile = null;
-    } else {
-      extractedProfile = profileResult;
-    }
+    // Only extract profile information if we have text content
+    if (text && text.trim()) {
+      // Extract profile information
+      const profileResult = await extractProfileFromResume(text);
+      if ('error' in profileResult) {
+        console.error('Failed to extract profile from resume:', profileResult.error);
+        showWarning('Profile Extraction Failed', 'Could not extract profile information, but resume was saved.');
+        extractedProfile = null;
+      } else {
+        extractedProfile = profileResult;
+      }
 
-    // Extract keywords
-    const keywordsResult = await extractKeywordsFromResume(text);
-    if ('error' in keywordsResult) {
-      console.error('Failed to extract keywords from resume:', keywordsResult.error);
-      showWarning('Keyword Extraction Failed', 'Could not extract keywords for job searching.');
-      keywords = [];
+      // Extract keywords
+      const keywordsResult = await extractKeywordsFromResume(text);
+      if ('error' in keywordsResult) {
+        console.error('Failed to extract keywords from resume:', keywordsResult.error);
+        showWarning('Keyword Extraction Failed', 'Could not extract keywords for job searching.');
+        keywords = [];
+      } else {
+        keywords = keywordsResult;
+      }
     } else {
-      keywords = keywordsResult;
+      // No text content, set empty defaults
+      extractedProfile = null;
+      keywords = [];
+      showWarning('No Text Content', 'Could not extract text from the uploaded file. Resume saved but no profile information extracted.');
     }
 
     const newResume: Resume = {
@@ -174,21 +200,39 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
         let extractedProfile = selectedResume.parsedInfo;
         let profileToUpdate = { ...profile };
 
-        if (!extractedProfile) {
-          const result = await extractProfileFromResume(selectedResume.text);
+        // Check if we have valid parsedInfo and we're not already extracting this resume
+        const hasValidParsedInfo = extractedProfile && 
+          typeof extractedProfile === 'object' && 
+          (extractedProfile.personalInfo || extractedProfile.experience || extractedProfile.education || extractedProfile.skills);
+
+        if (!hasValidParsedInfo && !extractingProfiles.has(resumeId)) {
+          // Mark this resume as being processed to prevent duplicate calls
+          setExtractingProfiles(prev => new Set(prev).add(resumeId));
           
-          if (result && typeof result === 'object' && 'error' in result) {
-            console.error('Failed to extract profile from resume:', (result as any).error);
-            showError('Profile Extraction Failed', (result as any).error.message || 'Failed to extract profile information from resume.');
-            extractedProfile = undefined;
-          } else {
-            extractedProfile = result as any;
+          try {
+            const result = await extractProfileFromResume(selectedResume.text);
+            
+            if (result && typeof result === 'object' && 'error' in result) {
+              console.error('Failed to extract profile from resume:', (result as any).error);
+              showError('Profile Extraction Failed', (result as any).error.message || 'Failed to extract profile information from resume.');
+              extractedProfile = undefined;
+            } else {
+              extractedProfile = result as any;
+              
+              // Save the extracted profile back to the resume for future use
+              const updatedResumes = profile.resumes?.map(r => 
+                r.id === resumeId ? { ...r, parsedInfo: extractedProfile } : r
+              );
+              profileToUpdate = { ...profile, resumes: updatedResumes };
+            }
+          } finally {
+            // Always remove from extracting set
+            setExtractingProfiles(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(resumeId);
+              return newSet;
+            });
           }
-          
-          const updatedResumes = profile.resumes?.map(r => 
-            r.id === resumeId ? { ...r, parsedInfo: extractedProfile } : r
-          );
-          profileToUpdate = { ...profile, resumes: updatedResumes };
         }
 
         let finalProfile = { ...profileToUpdate, settings: { ...profileToUpdate.settings, activeResumeId: resumeId } };
@@ -204,7 +248,11 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
         
         await saveUserProfile(finalProfile);
         onProfileUpdate(finalProfile);
-        showSuccess('Resume Selected', 'Resume has been set as active and profile updated.');
+        
+        if (!extractingProfiles.has(resumeId)) {
+          // Only show success message if we're not in the middle of extraction
+          showSuccess('Resume Selected', 'Resume has been set as active and profile updated.');
+        }
       } catch (error) {
         console.error('Failed to select resume:', error);
         showError('Selection Failed', 'Failed to select resume. Please try again.');
@@ -276,9 +324,20 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
               ) : (
                 <>
                   <span className="text-slate-700">{resume.name}</span>
-                  {profile.settings.activeResumeId === resume.id && (
-                    <span className="ml-2 px-2 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">Default</span>
-                  )}
+                  <div className="flex items-center gap-2 ml-2">
+                    {profile.settings.activeResumeId === resume.id && (
+                      <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">Active</span>
+                    )}
+                    {isBeingProcessed(resume.id) && (
+                      <span className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-200 rounded-full">Processing...</span>
+                    )}
+                    {hasValidParsedInfo(resume) && !isBeingProcessed(resume.id) && (
+                      <span className="px-2 py-1 text-xs font-semibold text-purple-800 bg-purple-200 rounded-full">Processed</span>
+                    )}
+                    {!hasValidParsedInfo(resume) && !isBeingProcessed(resume.id) && (
+                      <span className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded-full">Not Processed</span>
+                    )}
+                  </div>
                 </>
               )}
               <div className="flex items-center space-x-4">
@@ -288,7 +347,11 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
                   checked={profile.settings.activeResumeId === resume.id}
                   onChange={() => handleSelectResume(resume.id)}
                   className="form-radio h-5 w-5 text-blue-600"
+                  disabled={isBeingProcessed(resume.id)}
                 />
+                {!hasValidParsedInfo(resume) && !isBeingProcessed(resume.id) && (
+                  <span className="text-xs text-orange-600">(needs processing)</span>
+                )}
                 {editingResumeId === resume.id ? (
                   <>
                     <button onClick={() => handleSaveRename(resume.id)} className="p-2 text-green-500 hover:text-green-700"><FiSave size={20} /></button>
@@ -297,6 +360,15 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({ profile, onProfileUpdate 
                 ) : (
                   <>
                     <button onClick={() => handleRename(resume)} className="p-2 text-blue-500 hover:text-blue-700"><FiEdit size={20} /></button>
+                    {!hasValidParsedInfo(resume) && !isBeingProcessed(resume.id) && (
+                      <button 
+                        onClick={() => handleSelectResume(resume.id)} 
+                        className="p-2 text-purple-500 hover:text-purple-700"
+                        title="Process resume to extract profile information"
+                      >
+                        <FiUpload size={20} />
+                      </button>
+                    )}
                   </>
                 )}
                 <button onClick={() => handleDelete(resume.id)} className="p-2 text-red-500 hover:text-red-700"><FiTrash2 size={20} /></button>

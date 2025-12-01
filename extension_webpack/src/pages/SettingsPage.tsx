@@ -104,6 +104,35 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
           return;
         }
 
+        // Validate that all providers have required fields
+        const invalidProvider = profile.settings.apiProviders?.find(provider => {
+          if (!provider.apiKey || !provider.model) {
+            if (provider.name === 'Ollama') {
+              return !provider.model; // Ollama only requires model (apiKey has default)
+            }
+            return !provider.apiKey || !provider.model;
+          }
+          return false;
+        });
+
+        if (invalidProvider) {
+          showWarning(
+            'Incomplete Provider Configuration',
+            `Please complete the configuration for "${invalidProvider.name}" provider (API key and model are required).`,
+            {
+              action: {
+                label: 'Fix',
+                onClick: () => {
+                  // Focus on the provider configuration
+                  const providerElements = document.querySelectorAll('[data-provider-id]');
+                  // This would need additional data attributes to be fully functional
+                },
+              },
+            }
+          );
+          return;
+        }
+
         let profileToSave = { ...profile };
         if (profile.settings.passcodeEnabled) {
           if (passcode || confirmPasscode) {
@@ -166,9 +195,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
         } else if (value === 'Gemini') {
           defaultModel = 'gemini-1.5-flash';
         } else if (value === 'Ollama') {
-          defaultModel = 'llama3';
+          // Don't set a default model immediately - let user select from available models
+          defaultModel = '';
           newProviders[index].apiKey = 'http://localhost:11434';
-          showInfo('Ollama Configured', 'Default Ollama host (localhost:11434) has been set. Make sure Ollama is running.');
+          showInfo('Ollama Configured', 'Default Ollama host (localhost:11434) has been set. Please click the refresh button to load available models and select one.');
         }
         newProviders[index].model = defaultModel;
       }
@@ -291,6 +321,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
                       onChange={(e) => handleProviderChange(index, 'model', e.target.value)}
                       className="p-4 w-full bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
                     >
+                      <option value="">Select a model (click refresh to load available models)</option>
                       {(providerModels[provider.id] || []).map(modelName => (
                         <option key={modelName} value={modelName}>{modelName}</option>
                       ))}
