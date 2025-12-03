@@ -36,15 +36,15 @@
   },
   "action": {
     "default_icon": {
-      "16": "icon16.svg",
-      "48": "icon48.svg",
-      "128": "icon128.svg"
+      "16": "icon16.jpg",
+      "48": "icon48.jpg",
+      "128": "icon128.jpg"
     }
   },
   "icons": {
-    "16": "icon16.svg",
-    "48": "icon48.svg",
-    "128": "icon128.svg"
+    "16": "icon16.jpg",
+    "48": "icon48.jpg",
+    "128": "icon128.jpg"
   },
   "web_accessible_resources": [
     {

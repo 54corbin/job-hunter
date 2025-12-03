@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { getUserProfile, saveUserProfile, UserProfile, ApiProvider } from '../services/storageService';
+import { getUserProfile, saveUserProfile, UserProfile, ApiProvider, checkEncryptionStatus } from '../services/storageService';
 import { listModels } from '../services/llmService';
 import { useNotifications } from '../components/NotificationProvider';
-import { FiSave, FiKey, FiToggleLeft, FiToggleRight, FiLock, FiPlus, FiTrash2, FiCpu, FiDownloadCloud } from 'react-icons/fi';
+import { FiSave, FiKey, FiToggleLeft, FiToggleRight, FiLock, FiPlus, FiTrash2, FiCpu, FiDownloadCloud, FiShield, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 interface SettingsPageProps {
@@ -15,6 +15,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
   const [passcode, setPasscode] = useState("");
   const [confirmPasscode, setConfirmPasscode] = useState("");
   const [passcodeError, setPasscodeError] = useState("");
+  const [encryptionStatus, setEncryptionStatus] = useState<{
+    isAvailable: boolean;
+    isEnabled: boolean;
+    isValid: boolean;
+    version?: string;
+  } | null>(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', message: '', onConfirm: () => {} });
@@ -50,6 +56,24 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
   }, []);
 
   useEffect(() => {
+    loadEncryptionStatus();
+  }, []);
+
+  const loadEncryptionStatus = async () => {
+    try {
+      const status = await checkEncryptionStatus();
+      setEncryptionStatus(status);
+    } catch (error) {
+      console.error('Failed to load encryption status:', error);
+      setEncryptionStatus({
+        isAvailable: false,
+        isEnabled: false,
+        isValid: false
+      });
+    }
+  };
+
+  useEffect(() => {
     if (profile?.settings.apiProviders) {
       profile.settings.apiProviders.forEach(provider => {
         if (provider.name === 'Ollama' && provider.apiKey) {
@@ -83,7 +107,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
       if (profile) {
         if (!profile.settings.activeAiProviderId || profile.settings.apiProviders?.length === 0) {
@@ -135,21 +159,26 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
 
         let profileToSave = { ...profile };
         if (profile.settings.passcodeEnabled) {
-          if (passcode || confirmPasscode) {
-            if (passcode.length !== 4 || confirmPasscode.length !== 4) {
-              setPasscodeError("Passcode must be 4 digits.");
-              showError('Invalid Passcode', 'Passcode must be exactly 4 digits.');
-              return;
-            }
-            if (passcode !== confirmPasscode) {
-              setPasscodeError("Passcodes do not match.");
-              showError('Passcode Mismatch', 'The passcodes you entered do not match.');
-              return;
-            }
-            profileToSave.settings.passcode = passcode;
+          if (!passcode || !confirmPasscode) {
+            setPasscodeError("Please enter your 4-digit passcode to save settings.");
+            showError('Passcode Required', 'Please enter your 4-digit passcode to save settings with encryption enabled.');
+            return;
           }
+          
+          if (passcode.length !== 4 || confirmPasscode.length !== 4) {
+            setPasscodeError("Passcode must be 4 digits.");
+            showError('Invalid Passcode', 'Passcode must be exactly 4 digits.');
+            return;
+          }
+          if (passcode !== confirmPasscode) {
+            setPasscodeError("Passcodes do not match.");
+            showError('Passcode Mismatch', 'The passcodes you entered do not match.');
+            return;
+          }
+          profileToSave.settings.passcode = passcode;
         } else {
           delete profileToSave.settings.passcode;
+          delete profileToSave.settings.passcodeHash;
         }
 
         saveUserProfile(profileToSave).then(() => {
@@ -158,6 +187,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
           setConfirmPasscode("");
           setPasscodeError("");
           onSettingsSave();
+          // Refresh encryption status after save
+          loadEncryptionStatus();
         }).catch((error) => {
           console.error("Failed to save settings:", error);
           showError('Save Failed', 'Failed to save settings. Please try again.');
@@ -255,7 +286,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
 
   const handleToggleChange = (field: keyof UserProfile['settings'], value: boolean) => {
     if (profile) {
-      setProfile({ ...profile, settings: { ...profile.settings, [field]: value } });
+      const newProfile = { ...profile, settings: { ...profile.settings, [field]: value } };
+      setProfile(newProfile);
+      
+      // If passcode is being enabled, refresh encryption status
+      if (field === 'passcodeEnabled' && value) {
+        setTimeout(() => {
+          loadEncryptionStatus();
+        }, 100); // Small delay to allow state update
+      }
     }
   };
 
@@ -263,6 +302,50 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
     if (profile) {
       setProfile({ ...profile, settings: { ...profile.settings, lockoutDelay: value } });
     }
+  };
+
+  const getEncryptionStatusIcon = () => {
+    if (!encryptionStatus?.isAvailable) {
+      return <FiAlertTriangle className="w-5 h-5 text-red-500" />;
+    }
+    if (!profile?.settings.passcodeEnabled) {
+      return <FiAlertTriangle className="w-5 h-5 text-yellow-500" />;
+    }
+    // Only validate if passcode is enabled
+    if (encryptionStatus.isValid) {
+      return <FiCheckCircle className="w-5 h-5 text-green-500" />;
+    }
+    // If validation failed but passcode is enabled, there's an issue
+    return <FiAlertTriangle className="w-5 h-5 text-red-500" />;
+  };
+
+  const getEncryptionStatusText = () => {
+    if (!encryptionStatus?.isAvailable) {
+      return 'Encryption not available in this browser';
+    }
+    if (!profile?.settings.passcodeEnabled) {
+      return 'Enable passcode to encrypt your data';
+    }
+    // Only show validation status if passcode is enabled
+    if (encryptionStatus.isValid) {
+      return 'Your data is encrypted with AES-256-GCM (enter passcode to save changes)';
+    }
+    // If passcode is enabled but validation failed, there's a problem
+    return 'Encryption enabled but validation failed';
+  };
+
+  const getEncryptionStatusColor = () => {
+    if (!encryptionStatus?.isAvailable) return 'text-red-600';
+    if (!profile?.settings.passcodeEnabled) return 'text-yellow-600';
+    if (encryptionStatus.isValid) return 'text-green-600';
+    return 'text-red-600';
+  };
+
+  const getEncryptionBackgroundColor = () => {
+    if (!encryptionStatus?.isAvailable) return 'bg-red-50 border-red-200';
+    if (!profile?.settings.passcodeEnabled) return 'bg-yellow-50 border-yellow-200';
+    if (encryptionStatus.isValid) return 'bg-green-50 border-green-200';
+    return 'bg-red-50 border-red-200';
   };
 
   
@@ -453,9 +536,27 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
           <div className="p-2 bg-purple-100 rounded-lg">
             <FiLock className="w-6 h-6 text-purple-600" />
           </div>
-          <h2 className="text-3xl font-bold text-slate-800">Passcode Settings</h2>
+          <h2 className="text-3xl font-bold text-slate-800">Security Settings</h2>
         </div>
-        <Toggle enabled={profile.settings.passcodeEnabled} onChange={(val) => handleToggleChange('passcodeEnabled', val)} label="Enable Passcode" Icon={profile.settings.passcodeEnabled ? FiToggleRight : FiToggleLeft} />
+        
+        <Toggle enabled={profile.settings.passcodeEnabled} onChange={(val) => handleToggleChange('passcodeEnabled', val)} label="Enable Passcode Protection" Icon={profile.settings.passcodeEnabled ? FiToggleRight : FiToggleLeft} />
+        
+        {/* Encryption Status */}
+        <div className={`p-4 rounded-lg border ${getEncryptionBackgroundColor()}`}>
+          <div className="flex items-center gap-3">
+            {getEncryptionStatusIcon()}
+            <div>
+              <p className={`font-semibold ${getEncryptionStatusColor()}`}>
+                {getEncryptionStatusText()}
+              </p>
+              {encryptionStatus?.version && (
+                <p className="text-sm text-slate-600 mt-1">
+                  Encryption Version: {encryptionStatus.version}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
         
         {profile.settings.passcodeEnabled && (
           <div className="space-y-6 pt-6 border-t border-slate-200">
@@ -496,6 +597,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSave }) => {
               </select>
             </div>
             {passcodeError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2 font-medium">{passcodeError}</p>}
+            
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <FiShield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-blue-800 font-medium text-sm">Data Protection</p>
+                  <p className="text-blue-700 text-xs mt-1">
+                    When you enable passcode protection, your personal data, resumes, and job information will be encrypted using AES-256-GCM encryption. 
+                    You must enter your 4-digit passcode each time you save settings to update encrypted data.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
