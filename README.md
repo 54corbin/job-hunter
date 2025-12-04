@@ -16,6 +16,14 @@ Job Hunter is a powerful Chrome extension that automates and streamlines your jo
 - **⚡ Auto-Fill Integration**: Intelligent form detection and population across job boards
 - **📊 Application Tracking**: Monitor your job search progress and application history
 
+## Screenshots
+<img width="1890" height="999" alt="image" src="https://github.com/user-attachments/assets/d61cfb65-ddad-4df4-8ec5-05e710b79741" />
+<img width="1884" height="993" alt="image" src="https://github.com/user-attachments/assets/025fc550-aa12-4b8b-896e-c9901917f9ee" />
+<img width="1442" height="836" alt="image" src="https://github.com/user-attachments/assets/0a9e5f31-99d0-43cf-9edf-95c995a4c26c" />
+<img width="972" height="834" alt="image" src="https://github.com/user-attachments/assets/e3453626-3f96-41c4-9640-ca0dc23645bd" />
+<img width="1331" height="998" alt="image" src="https://github.com/user-attachments/assets/023473fe-6cca-446c-b926-8fda440f8fad" />
+
+
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 19.1.1, TypeScript 5.8.3, Tailwind CSS 4.1.11
